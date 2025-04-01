@@ -3,22 +3,20 @@ package com.example.app.controller;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.example.app.service.MealPostService;
 
 import lombok.RequiredArgsConstructor;
 
 @Controller
-@RequestMapping("/mealposts")
 @RequiredArgsConstructor
 public class MealPostController {
 	private final MealPostService service;
 
-	@GetMapping
+	@GetMapping("/mealposts")
 	public String list(Model model) throws Exception {
 		model.addAttribute("mealPosts", service.getMealPostList());
-		return "mealposts/list";
+	    return "mealposts/list";
 	}
 }
 
