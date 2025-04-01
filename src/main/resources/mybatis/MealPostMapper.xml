@@ -4,32 +4,32 @@
 <mapper namespace="com.example.app.mapper.MealPostMapper">
 	<select id="selectAll" resultType="MealPost">
 		SELECT
-		mealPost.id, mealPost.name,mealPost.age,
-		mealPost.address, mealPost.created,
+		meal_post.id, meal_post.name,meal_post.age,
+		meal_post.address, meal_post.created,
 		meal_post_types.name AS type_name
-		FROM mealPost
+		FROM meal_post
 		JOIN meal_post_types
-		ON mealPost.type_id = meal_post_types.id
+		ON meal_post.type_id = meal_post_types.id
 	</select>
 	<select id="selectById" parameterType="int" resultType="MealPost">
 		SELECT
-		mealPost.id, mealPost.name,mealPost.age,
-		mealPost.address, mealPost.created,
-		mealPost.type_id
-		FROM mealPost
-		WHERE mealPost.id = #{id}
+		meal_post.id, meal_post.name,meal_post.age,
+		meal_post.address, meal_post.created,
+		meal_post.type_id
+		FROM meal_post
+		WHERE meal_post.id = #{id}
 	</select>
 	<insert id="insert" parameterType="MealPost">
-		INSERT INTO mealPost (name, age, address, type_id, created)
+		INSERT INTO meal_post (name, age, address, type_id, created)
 		VALUES (#{name}, #{age}, #{address}, #{typeId}, NOW())
 	</insert>
 	<update id="update" parameterType="MealPost">
-		UPDATE mealPost
+		UPDATE meal_post
 		SET name = #{name}, age = #{age},
 		address = #{address}, type_id = #{typeId}
 		WHERE id = #{id}
 	</update>
 	<delete id="delete" parameterType="int">
-		DELETE FROM mealPost WHERE id = #{id}
+		DELETE FROM meal_post WHERE id = #{id}
 	</delete>
 </mapper>
