@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.app.mapper.MealPostMapper">
+	<select id="selectAll" resultType="MealPost">
+		SELECT
+		mealPost.id, mealPost.name,mealPost.age,
+		mealPost.address, mealPost.created,
+		meal_post_types.name AS type_name
+		FROM mealPost
+		JOIN meal_post_types
+		ON mealPost.type_id = meal_post_types.id
+	</select>
+	<select id="selectById" parameterType="int" resultType="MealPost">
+		SELECT
+		mealPost.id, mealPost.name,mealPost.age,
+		mealPost.address, mealPost.created,
+		mealPost.type_id
+		FROM mealPost
+		WHERE mealPost.id = #{id}
+	</select>
+	<insert id="insert" parameterType="MealPost">
+		INSERT INTO mealPost (name, age, address, type_id, created)
+		VALUES (#{name}, #{age}, #{address}, #{typeId}, NOW())
+	</insert>
+	<update id="update" parameterType="MealPost">
+		UPDATE mealPost
+		SET name = #{name}, age = #{age},
+		address = #{address}, type_id = #{typeId}
+		WHERE id = #{id}
+	</update>
+	<delete id="delete" parameterType="int">
+		DELETE FROM mealPost WHERE id = #{id}
+	</delete>
+</mapper>
