@@ -18,7 +18,7 @@ public class UserController {
 	private final UserMapper mapper;
 
 	// 会員一覧の表示
-	@GetMapping("/")
+	@GetMapping("/users")
 	public String list(Model model) throws Exception {
 		model.addAttribute("users", mapper.selectUsers());
 		return "users";

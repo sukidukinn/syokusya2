@@ -10,7 +10,11 @@ import com.example.app.domain.User;
 public interface UserMapper {
 	List<User> selectUsers();
 
-	void addUser(User user);
+	User selectById(int id);
+
+	int addUser(User user);
+
+	int updateUser(User user);
+
+	int deleteUser(int id);
 }
-
-
