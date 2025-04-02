@@ -7,6 +7,7 @@ import org.hibernate.validator.constraints.Range;
 
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -60,7 +61,22 @@ public class User {
 	@Size(max = 255, message = "自己紹介は255字以内で入力してください")
 	private String bio;
 
-	private Boolean deleted;
+    @NotBlank
+    @Email
+    private String email;
 
+    @NotBlank
+    private String password;
+
+    private String nickname;
+
+    private String photoPath;
+
+    private LocalDateTime lastLogin;
+
+    private LocalDateTime lastLogout;
+    
 	private LocalDateTime created;
+
+	private Boolean deleted;
 }

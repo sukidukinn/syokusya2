@@ -3,58 +3,61 @@
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.app.mapper.UserMapper">
 
-	<!-- 全件取得 -->
-	<select id="selectUsers" resultType="User">
-		SELECT *
+	<select id="findByEmail"
+		resultType="com.example.app.domain.User" parameterType="string">
+		SELECT id, name, email, password, nickname, photo_path,
+		type_id, sex, age, address, height_cm, weight_kg,
+		goal_weight_kg, bmi, bmr, activity_level, bio,
+		created, last_login, last_logout, deleted
 		FROM users
-		WHERE deleted = FALSE
-		ORDER BY id
+		WHERE email = #{email} AND deleted = FALSE
 	</select>
 
-	<!-- ID指定で取得 -->
-	<select id="selectById" parameterType="int" resultType="User">
-		SELECT *
-		FROM users
-		WHERE id = #{id}
+	<update id="updateLastLogin" parameterType="int">
+		UPDATE users SET last_login_at = NOW() WHERE id = #{id}
+	</update>
+
+	<update id="updateLastLogout" parameterType="int">
+		UPDATE users SET last_logout_at = NOW() WHERE id = #{id}
+	</update>
+
+	<select id="selectUsers"
+		resultType="com.example.app.domain.User">
+		SELECT * FROM users WHERE deleted = FALSE ORDER BY id
 	</select>
 
-	<!-- ユーザー追加 -->
-	<insert id="addUser" parameterType="User">
+	<select id="selectById" parameterType="int"
+		resultType="com.example.app.domain.User">
+		SELECT * FROM users WHERE id = #{id}
+	</select>
+
+	<insert id="addUser" parameterType="com.example.app.domain.User">
 		INSERT INTO users (
-		name, age, address, type_id,
-		sex, height_cm, weight_kg, goal_weight_kg,
-		bmi, bmr, activity_level, bio, deleted, created
+		name, age, address, type_id, sex, height_cm, weight_kg,
+		goal_weight_kg, bmi, bmr, activity_level, bio,
+		email, password, nickname, photo_path,
+		deleted, created
 		) VALUES (
-		#{name}, #{age}, #{address}, #{typeId},
-		#{sex}, #{heightCm}, #{weightKg}, #{goalWeightKg},
-		#{bmi}, #{bmr}, #{activityLevel}, #{bio}, FALSE, NOW()
+		#{name}, #{age}, #{address}, #{typeId}, #{sex}, #{heightCm}, #{weightKg},
+		#{goalWeightKg}, #{bmi}, #{bmr}, #{activityLevel}, #{bio},
+		#{email}, #{password}, #{nickname}, #{photoPath},
+		FALSE, NOW()
 		)
 	</insert>
 
-	<!-- ユーザー更新 -->
-	<update id="updateUser" parameterType="User">
-		UPDATE users
-		SET
-		name = #{name},
-		age = #{age},
-		address = #{address},
-		type_id = #{typeId},
-		sex = #{sex},
-		height_cm = #{heightCm},
-		weight_kg = #{weightKg},
-		goal_weight_kg = #{goalWeightKg},
-		bmi = #{bmi},
-		bmr = #{bmr},
-		activity_level = #{activityLevel},
-		bio = #{bio}
+	<update id="updateUser"
+		parameterType="com.example.app.domain.User">
+		UPDATE users SET
+		name = #{name}, age = #{age}, address = #{address}, type_id = #{typeId},
+		sex = #{sex}, height_cm = #{heightCm}, weight_kg = #{weightKg},
+		goal_weight_kg = #{goalWeightKg}, bmi = #{bmi}, bmr = #{bmr},
+		activity_level = #{activityLevel}, bio = #{bio},
+		nickname = #{nickname}, photo_path = #{photoPath}
 		WHERE id = #{id}
 	</update>
 
-	<!-- 論理削除 -->
 	<update id="deleteUser" parameterType="int">
-		UPDATE users
-		SET deleted = TRUE
-		WHERE id = #{id}
+		UPDATE users SET deleted = TRUE WHERE id = #{id}
 	</update>
 
 </mapper>
