@@ -1,9 +1,17 @@
 package com.example.app.controller;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
+import com.example.app.domain.MealPost;
+import com.example.app.domain.MealPostIngredient;
+import com.example.app.mapper.MealPostIngredientMapper;
+import com.example.app.mapper.MealPostMapper;
 import com.example.app.service.MealPostService;
 
 import lombok.RequiredArgsConstructor;
@@ -11,12 +19,43 @@ import lombok.RequiredArgsConstructor;
 @Controller
 @RequiredArgsConstructor
 public class MealPostController {
+	@Autowired
+	MealPostIngredientMapper mealPostIngredientMapper;
 	private final MealPostService service;
-
+	
+	@Autowired
+	MealPostMapper mealPostMapper;
+	
 	@GetMapping("/mealposts")
 	public String list(Model model) throws Exception {
 		model.addAttribute("mealPosts", service.getMealPostList());
-	    return "mealposts/list";
+		return "mealposts/list";
+	}
+	
+	@GetMapping("/mealPosts/delete/{id}")
+	public String delete(@PathVariable Integer id)  throws Exception {
+	    mealPostMapper.softDeleteById(id);  // ← ↓ mapper に定義しておく
+	    return "redirect:/mealposts";       // 一覧にリダイレクト
+	}
+	
+	@GetMapping("/mealposts/edit/{id}")
+	public String edit(@PathVariable Integer id, Model model)  throws Exception {
+		MealPost post = mealPostMapper.selectById(id);
+		List<MealPostIngredient> ingredients = mealPostIngredientMapper.selectByMealPostId(id);
+		model.addAttribute("mealPost", post);
+		model.addAttribute("ingredients", ingredients);
+		return "mealposts/edit";
+	}
+	@GetMapping("/mealPosts/edit/{id}")
+	public String editMealPost(@PathVariable Integer id, Model model)  throws Exception  {
+	    MealPost mealPost = mealPostMapper.selectById(id);
+	    if (mealPost == null) {
+	        return "redirect:/mealPosts";
+	    }
+	    List<MealPostIngredient> ingredients = mealPostIngredientMapper.selectByMealPostId(id);
+	    model.addAttribute("mealPost", mealPost);
+	    model.addAttribute("ingredients", ingredients);
+	    return "mealposts/detail";
 	}
 }
 

@@ -14,4 +14,6 @@ public interface MealPostMapper {
 	void update(MealPost mealPost) throws Exception;
 
 	void delete(Integer id) throws Exception;
+	
+	void softDeleteById(Integer id) throws Exception;
 }

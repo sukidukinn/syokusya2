@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<title>食事投稿詳細</title>
+	<link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+</head>
+
+<body>
+	<div class="card mb-4">
+		<div class="row g-0">
+			<div class="col-md-4">
+				<img th:src="@{'/' + ${mealPost.photoPath}}" class="img-fluid rounded-start" alt="meal photo">
+			</div>
+			<div class="col-md-8">
+				<div class="card-body">
+					<h5 class="card-title" th:text="${mealPost.mealName}"></h5>
+					<p class="card-text"><strong>時間：</strong><span
+							th:text="${#temporals.format(mealPost.mealTime, 'yyyy-MM-dd HH:mm')}"></span></p>
+					<p class="card-text"><strong>メモ：</strong><span th:text="${mealPost.memo}"></span></p>
+					<p class="card-text"><strong>合計カロリー：</strong><span th:text="${mealPost.totalCalorie}"></span> kcal
+					</p>
+					<p class="card-text">
+						<strong>たんぱく質：</strong> <span th:text="${mealPost.proteinG}"></span> g ／
+						<strong>脂質：</strong> <span th:text="${mealPost.fatG}"></span> g ／
+						<strong>炭水化物：</strong> <span th:text="${mealPost.carbohydrateG}"></span> g
+					</p>
+					<p class="card-text">
+						<strong>食物繊維：</strong> <span th:text="${mealPost.fiberG}"></span> g ／
+						<strong>塩分：</strong> <span th:text="${mealPost.saltG}"></span> g ／
+						<strong>コレステロール：</strong> <span th:text="${mealPost.cholesterolMg}"></span> mg
+					</p>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- 食材一覧セクション -->
+	<h4 class="mt-5">使用食材一覧</h4>
+	<table class="table">
+		<tr>
+			<th>ID</th>
+			<th>食材名</th>
+			<th>使用量 (g)</th>
+			<th>たんぱく質</th>
+			<th>脂質</th>
+			<th>炭水化物</th>
+			<th>操作</th>
+		</tr>
+		<tr th:each="ingredient : ${ingredients}">
+			<td>[[${ingredient.id}]]</td>
+			<td>[[${ingredient.nutritionFoodName}]]</td>
+			<td>[[${ingredient.amountG}]]</td>
+			<td>[[${ingredient.proteinG}]]</td>
+			<td>[[${ingredient.fatG}]]</td>
+			<td>[[${ingredient.carbohydrateG}]]</td>
+			<td>
+				<a class="btn btn-primary btn-sm"
+					th:href="@{/mealPosts/{postId}/ingredients/edit/{id}(postId=${mealPost.id}, id=${ingredient.id})}">編集</a>
+				<button class="btn btn-danger delete" th:data-href="@{/mealPosts/delete/{id}(id=${mealPost.id})}"
+					th:data-name="${mealPost.mealName}" data-bs-toggle="modal" data-bs-target="#confirm-modal">
+					削除
+				</button>
+			</td>
+		</tr>
+	</table>
+
+	<!-- 食材追加ボタン -->
+	<div class="text-end">
+		<a class="btn btn-success" th:href="@{/mealPosts/{postId}/ingredients/add(postId=${mealPost.id})}">＋
+			食材を追加</a>
+	</div>
+
+	<!-- 戻る -->
+	<p class="mt-4">
+		<a class="btn btn-secondary" th:href="@{/mealposts}">← 一覧へ戻る</a>
+	</p>
+	</div>
+	<script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+	<!-- 削除確認モーダル -->
+	<div class="modal fade" id="confirm-modal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">削除確認</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+				</div>
+				<div class="modal-body">
+					「<span id="delete-name"></span>」の食事投稿を削除します。よろしいですか？
+				</div>
+				<div class="modal-footer">
+					<a class="btn btn-danger" id="delete-yes">はい</a>
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">いいえ</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script>
+		document.querySelectorAll(".delete").forEach(btn =>
+			btn.addEventListener("click", e => {
+				const name = e.target.getAttribute("data-name");
+				document.getElementById("delete-name").textContent = name;
+				const href = e.target.getAttribute("data-href");
+				document.getElementById("delete-yes").setAttribute("href", href);
+			})
+		);
+	</script>
+
+</body>
+
+</html>

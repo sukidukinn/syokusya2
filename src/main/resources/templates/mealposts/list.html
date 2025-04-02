@@ -3,16 +3,16 @@
 
 <head>
 	<meta charset="UTF-8">
-	<title>会員一覧</title>
+	<title>食写一覧</title>
 	<link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
 </head>
 
 <body>
 	<div class="container">
-		<h1 class="mt-4">会員一覧</h1>
+		<h1 class="mt-4">食写一覧</h1>
 		<!-- 操作に応じたメッセージを表示:start -->
 		<div class="alert alert-success mt-4">
-			会員を追加しました等、操作に応じたメッセージ
+			食写を追加しました等、操作に応じたメッセージ
 		</div>
 		<!-- 操作に応じたメッセージを表示:end -->
 		<p>
@@ -20,36 +20,55 @@
 			<a class="mt-4 ml-4 btn btn-secondary" th:href="@{/logout}">ログアウト
 			</a>
 		</p>
-		
-		
+
+
 		<table class="table">
 			<tr>
 				<th>ID</th>
-				<th>氏名</th>
-				<th>年齢</th>
-				<th>住所</th>
-				<th>会員種別</th>
-				<th>登録日</th>
+				<th>食事名</th>
+				<th>食事時間</th>
+				<th>写真</th>
+				<th>メモ</th>
+				<th>カロリー(kcal)</th>
+				<th>たんぱく質(g)</th>
+				<th>脂質(g)</th>
+				<th>炭水化物(g)</th>
+				<th>食物繊維(g)</th>
+				<th>塩分(g)</th>
+				<th>コレステロール(mg)</th>
+				<th>登録日時</th>
 				<th colspan="2">操作</th>
 			</tr>
 			<tr th:each="mealPost : ${mealPosts}">
 				<td>[[${mealPost.id}]]</td>
-				<td>[[${mealPost.name}]]</td>
-				<td>[[${mealPost.age}]]</td>
-				<td>[[${mealPost.address}]]</td>
-				<td>[[${mealPost.typeName}]]</td>
-				<td>[[${#temporals.format(mealPost.created, 'yyyy 年 MM 月 dd 日')}]]</td>
-				<td><a class="btn btn-primary" th:href="@{/mealPosts/edit/{id}(id=${mealPost.id})}">編集
-					</a></td>
-				<td><button class="btn btn-danger delete" th:data-href="@{/mealPosts/delete/{id}(id=${mealPost.id})}"
-						th:data-name="${mealPost.name}" data-bs-toggle="modal"
-						data-bs-target="#confirm-modal">削除</button>
+				<td>[[${mealPost.mealName}]]</td>
+				<td>[[${#temporals.format(mealPost.mealTime, 'yyyy-MM-dd HH:mm')}]]</td>
+				<td>
+					<img th:src="@{/${mealPost.photoPath}}" alt="食事写真" width="80" height="80">
+				</td>
+				<td>[[${mealPost.memo}]]</td>
+				<td>[[${mealPost.totalCalorie}]]</td>
+				<td>[[${mealPost.proteinG}]]</td>
+				<td>[[${mealPost.fatG}]]</td>
+				<td>[[${mealPost.carbohydrateG}]]</td>
+				<td>[[${mealPost.fiberG}]]</td>
+				<td>[[${mealPost.saltG}]]</td>
+				<td>[[${mealPost.cholesterolMg}]]</td>
+				<td>[[${#temporals.format(mealPost.created, 'yyyy-MM-dd HH:mm')}]]</td>
+				<td>
+					<a class="btn btn-primary" th:href="@{/mealPosts/edit/{id}(id=${mealPost.id})}">編集</a>
+				</td>
+				<td>
+					<button class="btn btn-danger delete" th:data-href="@{/mealPosts/delete/{id}(id=${mealPost.id})}"
+						th:data-name="${mealPost.mealName}" data-bs-toggle="modal" data-bs-target="#confirm-modal">
+						削除
+					</button>
 				</td>
 			</tr>
 		</table>
-		
+
 	</div>
-	
+
 	<!-- 2 ページ以上の場合、ページネーションを表示:end -->
 	<!-- Bootstrap5 Modal -->
 	<div class="modal fade" id="confirm-modal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
