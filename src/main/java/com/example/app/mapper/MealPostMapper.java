@@ -14,6 +14,10 @@ public interface MealPostMapper {
 	void update(MealPost mealPost) throws Exception;
 
 	void delete(Integer id) throws Exception;
-	
+
+	// ★ 追加: ユーザーIDによる投稿取得
+	List<MealPost> findByUserId(Integer userId) throws Exception;
+
+	// ★ 追加: 論理削除
 	void softDeleteById(Integer id) throws Exception;
 }

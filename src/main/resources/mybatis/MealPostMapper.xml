@@ -4,6 +4,13 @@
 
 <mapper namespace="com.example.app.mapper.MealPostMapper">
 
+	<select id="findByUserId" parameterType="int"
+		resultType="MealPost">
+		SELECT * FROM meal_posts
+		WHERE user_id = #{userId} AND deleted = FALSE
+		ORDER BY meal_time DESC
+	</select>
+
 	<!-- 一覧取得 -->
 	<select id="selectAll" resultType="MealPost">
 		SELECT

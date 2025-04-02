@@ -41,7 +41,6 @@ public class LoginController {
 		}
 
 		User loginUser = userService.findByEmail(form.getEmail());
-		//!BCrypt.checkpw(form.getPassword(), loginUser.getPassword()
 		if (loginUser == null || !BCrypt.checkpw(form.getPassword(), loginUser.getPassword() )) {
 			result.reject("login.failed", "メールアドレスまたはパスワードが正しくありません");
 			return "login";

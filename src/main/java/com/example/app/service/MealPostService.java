@@ -17,4 +17,10 @@ public interface MealPostService {
 	void deleteMealPost(Integer id) throws Exception;
 
 	List<MealPostType> getTypeList() throws Exception;
+	
+	List<MealPost> getMealPostListByUserId(Integer userId) throws Exception;
+
+	void softDeleteMealPost(Integer id) throws Exception;
+	
+	List<MealPost> getMealPostsByUserId(int userId) throws Exception;
 }

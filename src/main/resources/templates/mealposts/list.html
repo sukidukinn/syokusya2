@@ -14,6 +14,12 @@
 		<div class="alert alert-success mt-4">
 			食写を追加しました等、操作に応じたメッセージ
 		</div>
+
+		<p class="text-end">
+			ログイン中： [[${session.loginUser.nickname}]] さん ( No. [[${session.loginUser.id}]] )
+			<span th:if="${session.loginUser.typeId == 3}" class="text-danger fw-bold">★運営モード★</span>
+		</p>
+
 		<!-- 操作に応じたメッセージを表示:end -->
 		<p>
 			<a class="mt-4 btn btn-primary" th:href="@{/mealposts/add}">会員の追加</a>

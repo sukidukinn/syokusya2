@@ -10,105 +10,60 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import com.example.app.domain.MealPost;
 import com.example.app.domain.MealPostIngredient;
+import com.example.app.domain.User;
 import com.example.app.mapper.MealPostIngredientMapper;
 import com.example.app.mapper.MealPostMapper;
 import com.example.app.service.MealPostService;
 
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequiredArgsConstructor
 public class MealPostController {
+
+	private final MealPostService mealPostService; // ← 名前をmealPostServiceに統一
+
 	@Autowired
-	MealPostIngredientMapper mealPostIngredientMapper;
-	private final MealPostService service;
-	
+	private MealPostMapper mealPostMapper;
+
 	@Autowired
-	MealPostMapper mealPostMapper;
-	
+	private MealPostIngredientMapper mealPostIngredientMapper;
+
 	@GetMapping("/mealposts")
-	public String list(Model model) throws Exception {
-		model.addAttribute("mealPosts", service.getMealPostList());
+	public String list(Model model, HttpSession session) throws Exception {
+		User loginUser = (User) session.getAttribute("loginUser");
+		if (loginUser == null) {
+			return "redirect:/login";
+		}
+
+		List<MealPost> posts;
+		if (loginUser.getTypeId() == 3) { //運営モード
+			posts = mealPostService.getMealPostList();
+		} else {
+			posts = mealPostService.getMealPostsByUserId(loginUser.getId());
+		}
+
+		model.addAttribute("mealPosts", posts);
+		model.addAttribute("loginUser", loginUser);
 		return "mealposts/list";
 	}
-	
+
 	@GetMapping("/mealPosts/delete/{id}")
-	public String delete(@PathVariable Integer id)  throws Exception {
-	    mealPostMapper.softDeleteById(id);  // ← ↓ mapper に定義しておく
-	    return "redirect:/mealposts";       // 一覧にリダイレクト
+	public String delete(@PathVariable Integer id) throws Exception {
+		mealPostMapper.softDeleteById(id);
+		return "redirect:/mealPosts";
 	}
-	
-	@GetMapping("/mealposts/edit/{id}")
-	public String edit(@PathVariable Integer id, Model model)  throws Exception {
-		MealPost post = mealPostMapper.selectById(id);
-		List<MealPostIngredient> ingredients = mealPostIngredientMapper.selectByMealPostId(id);
-		model.addAttribute("mealPost", post);
-		model.addAttribute("ingredients", ingredients);
-		return "mealposts/edit";
-	}
+
 	@GetMapping("/mealPosts/edit/{id}")
-	public String editMealPost(@PathVariable Integer id, Model model)  throws Exception  {
-	    MealPost mealPost = mealPostMapper.selectById(id);
-	    if (mealPost == null) {
-	        return "redirect:/mealPosts";
-	    }
-	    List<MealPostIngredient> ingredients = mealPostIngredientMapper.selectByMealPostId(id);
-	    model.addAttribute("mealPost", mealPost);
-	    model.addAttribute("ingredients", ingredients);
-	    return "mealposts/detail";
-	}
-}
-
-/*
-package com.example.app.controller;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-
-import com.example.app.domain.BookingFormItem;
-import com.example.app.domain.MealPostType;
-
-@Controller
-@RequestMapping("/mealpost")
-public class MealPostController {
-	@GetMapping
-	public String mealPostGet(Model model) {
-		var bookingFormItem = new BookingFormItem();
-		// あらかじめ「駐車場を利用しない」を設定
-		bookingFormItem.setParking(2);
-		model.addAttribute("bookingFormItem", bookingFormItem);
-		// 部屋の種類のリスト
-		model.addAttribute("mealPostTypeList", getMealPostTypeList());
-		return "mealPosting";
-	}
-
-	@PostMapping
-	public String bookingPost(
-			BookingFormItem bookingFormItem,
-			Model model) {
-		// 施設利用規約への同意がされていない場合、フォームを再表示
-		if (!bookingFormItem.getAgreement()) {
-			model.addAttribute("mealPostTypeList", getMealPostTypeList());
-			return "mealPosting";
+	public String editMealPost(@PathVariable Integer id, Model model) throws Exception {
+		MealPost mealPost = mealPostMapper.selectById(id);
+		if (mealPost == null) {
+			return "redirect:/mealPosts";
 		}
-		// 完了画面の表示
-		return "mealPostingDone";
-	}
-
-	// 部屋の種類のリストを返すメソッド
-	private List<MealPostType> getMealPostTypeList() {
-		List<MealPostType> mealPostTypeList = new ArrayList<>();
-		mealPostTypeList.add(new MealPostType(1, "会議室 A", "ホワイトボード有り"));
-		mealPostTypeList.add(new MealPostType(2, "会議室 B", "ホワイトボード無し"));
-		mealPostTypeList.add(new MealPostType(3, "視聴覚室", "プロジェクター有り"));
-		mealPostTypeList.add(new MealPostType(4, "多目的ルーム", "フローリング"));
-		return mealPostTypeList;
+		List<MealPostIngredient> ingredients = mealPostIngredientMapper.selectByMealPostId(id);
+		model.addAttribute("mealPost", mealPost);
+		model.addAttribute("ingredients", ingredients);
+		return "mealposts/detail";
 	}
 }
-*/
