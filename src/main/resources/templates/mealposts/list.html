@@ -5,6 +5,26 @@
 	<meta charset="UTF-8">
 	<title>食写一覧</title>
 	<link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+	<style>
+		.bg-morning {
+			background-color: #e0f7fa;
+			/* 水色 */
+		}
+
+		.bg-lunch {
+			background-color: #fff3e0;
+			/* 薄オレンジ */
+		}
+
+		.bg-dinner {
+			background-color: #AAAAFF;
+			/* 紺色 */
+		}
+
+		.bg-late-night {
+			background-color: 　#8888ff;
+		}
+	</style>
 </head>
 
 <body>
@@ -18,13 +38,12 @@
 		<p class="text-end">
 			ログイン中： [[${session.loginUser.nickname}]] さん ( No. [[${session.loginUser.id}]] )
 			<span th:if="${session.loginUser.typeId == 3}" class="text-danger fw-bold">★運営モード★</span>
+			<a class="mt-4 ml-4 btn btn-secondary" th:href="@{/logout}">ログアウト</a>
 		</p>
 
 		<!-- 操作に応じたメッセージを表示:end -->
 		<p>
-			<a class="mt-4 btn btn-primary" th:href="@{/mealposts/add}">会員の追加</a>
-			<a class="mt-4 ml-4 btn btn-secondary" th:href="@{/logout}">ログアウト
-			</a>
+			<a class="mt-4 btn btn-primary" th:href="@{/mealposts/add}">食事登録！</a>
 		</p>
 
 
@@ -45,7 +64,11 @@
 				<th>登録日時</th>
 				<th colspan="2">操作</th>
 			</tr>
-			<tr th:each="mealPost : ${mealPosts}">
+			<tr th:each="mealPost : ${mealPosts}" th:with="hour=${#temporals.format(mealPost.mealTime, 'HH')}"
+				th:classappend="| 
+        ${hour >= '05' and hour < '11' ? 'bg-morning' : 
+          (hour >= '11' and hour < '15' ? 'bg-lunch' : 
+            (hour >= '15' and hour < '22' ? 'bg-dinner' : 'bg-late-night'))} |">
 				<td>[[${mealPost.id}]]</td>
 				<td>[[${mealPost.mealName}]]</td>
 				<td>[[${#temporals.format(mealPost.mealTime, 'yyyy-MM-dd HH:mm')}]]</td>

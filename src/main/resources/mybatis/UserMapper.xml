@@ -14,11 +14,11 @@
 	</select>
 
 	<update id="updateLastLogin" parameterType="int">
-		UPDATE users SET last_login_at = NOW() WHERE id = #{id}
+		UPDATE users SET last_login = NOW() WHERE id = #{id}
 	</update>
 
 	<update id="updateLastLogout" parameterType="int">
-		UPDATE users SET last_logout_at = NOW() WHERE id = #{id}
+		UPDATE users SET last_logout = NOW() WHERE id = #{id}
 	</update>
 
 	<select id="selectUsers"
