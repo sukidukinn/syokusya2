@@ -1,6 +1,5 @@
 package com.example.app.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.app.domain.User;
@@ -11,7 +10,6 @@ public class UserServiceImpl implements UserService {
 
 	private final UserMapper userMapper;
 
-	@Autowired
 	public UserServiceImpl(UserMapper userMapper) {
 		this.userMapper = userMapper;
 	}
