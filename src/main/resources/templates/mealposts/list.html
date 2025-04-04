@@ -22,7 +22,7 @@
 		}
 
 		.bg-late-night {
-			background-color: 　#8888ff;
+			background-color: #8888ff;
 		}
 	</style>
 </head>
@@ -43,7 +43,7 @@
 
 		<!-- 操作に応じたメッセージを表示:end -->
 		<p>
-			<a class="mt-4 btn btn-primary" th:href="@{/mealposts/add}">食事登録！</a>
+			<a class="mt-4 btn btn-primary" th:href="@{/mealPosts/add}">食事投稿の追加</a>
 		</p>
 
 
@@ -73,7 +73,9 @@
 				<td>[[${mealPost.mealName}]]</td>
 				<td>[[${#temporals.format(mealPost.mealTime, 'yyyy-MM-dd HH:mm')}]]</td>
 				<td>
-					<img th:src="@{/${mealPost.photoPath}}" alt="食事写真" width="80" height="80">
+					<img th:if="${mealPost.photoPath != null}" th:src="@{'/' + ${mealPost.photoPath}}" alt="食事写真"
+						width="80" height="80" />
+					<span th:if="${mealPost.photoPath == null}">画像なし</span>
 				</td>
 				<td>[[${mealPost.memo}]]</td>
 				<td>[[${mealPost.totalCalorie}]]</td>
