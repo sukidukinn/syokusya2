@@ -107,12 +107,30 @@ public class MealPostController {
 		model.addAttribute("loginUser", loginUser);
 		return "mealposts/list";
 	}
-
+	
+	// 食事投稿削除
 	@GetMapping("/mealPosts/delete/{id}")
-	public String delete(@PathVariable Integer id) throws Exception {
+	public String deleteMealPost(@PathVariable Integer id) throws Exception {
 		mealPostMapper.softDeleteById(id);
-		return "redirect:/mealPosts";
+		return "redirect:/mealposts";
 	}
+	// 画像のみ削除
+	@GetMapping("/mealPosts/{id}/clearImage")
+	public String clearMealPostImage(@PathVariable Integer id) throws Exception {
+		MealPost post = mealPostMapper.selectById(id);
+		if (post != null && post.getPhotoPath() != null) {
+			// 実ファイルも削除
+			File file = new File(uploadPath + "/" + post.getPhotoPath().replace("uploads/", ""));
+			if (file.exists()) file.delete();
+
+			// DB上のphotoPathをnullに更新
+			post.setPhotoPath(null);
+			mealPostMapper.update(post);
+		}
+		return "redirect:/mealPosts/edit/" + id;
+	}
+
+	
 
 	@GetMapping("/mealPosts/edit/{id}")
 	public String editMealPost(@PathVariable Integer id, Model model) throws Exception {
