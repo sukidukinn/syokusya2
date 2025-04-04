@@ -32,8 +32,21 @@
 					</div>
 
 					<!-- 保存ボタン -->
-					<div class="text-start mt-3">
-						<button type="submit" class="btn btn-primary">食事情報更新</button>
+					<div class="mt-3 d-flex gap-3">
+						<!-- 保存ボタン（左寄せ） -->
+						<button type="submit" class="btn btn-primary">更新して戻る</button>
+
+						<!-- 画像削除ボタン（GETで画像のみクリア） -->
+						<a th:if="${mealPost.id != null}" th:href="@{/mealPosts/{id}/clearImage(id=${mealPost.id})}"
+							class="btn btn-warning" onclick="return confirm('画像を削除します。よろしいですか？');">
+							画像のみ削除
+						</a>
+
+						<!-- 投稿削除ボタン（GETで削除確認付き） -->
+						<a th:if="${mealPost.id != null}" th:href="@{/mealPosts/delete/{id}(id=${mealPost.id})}"
+							class="btn btn-danger" onclick="return confirm('この食事投稿を完全に削除します。よろしいですか？');">
+							食事削除
+						</a>
 					</div>
 				</div>
 
@@ -90,7 +103,13 @@
 	</form>
 
 	<!-- 食材一覧セクション -->
-	<h4 class="mt-5">使用食材一覧</h4>
+	<div class="mt-5 mb-3">
+		<h4 class="d-inline">使用食材一覧</h4>
+		<a class="btn btn-success ms-3 d-inline"
+			th:href="@{/mealPosts/{postId}/ingredients/add(postId=${mealPost.id})}">
+			＋ 食材を追加
+		</a>
+	</div>
 	<table class="table">
 		<tr>
 			<th>ID</th>
@@ -118,12 +137,6 @@
 			</td>
 		</tr>
 	</table>
-
-	<!-- 食材追加ボタン -->
-	<div class="text-end">
-		<a class="btn btn-success" th:href="@{/mealPosts/{postId}/ingredients/add(postId=${mealPost.id})}">＋
-			食材を追加</a>
-	</div>
 
 	<!-- 戻る -->
 	<p class="mt-4">

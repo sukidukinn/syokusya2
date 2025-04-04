@@ -7,7 +7,8 @@
 	<select id="findByUserId" parameterType="int"
 		resultType="MealPost">
 		SELECT * FROM meal_posts
-		WHERE user_id = #{userId} AND deleted = FALSE
+		WHERE user_id = #{userId} AND
+		deleted = FALSE
 		ORDER BY meal_time DESC
 	</select>
 
@@ -60,22 +61,20 @@
 	<update id="update" parameterType="MealPost">
 		UPDATE meal_posts
 		SET
-		user_id =
-		#{userId},
+		user_id = #{userId},
 		meal_name = #{mealName},
 		meal_time = #{mealTime},
-		photo_path =
-		#{photoPath},
+		photo_path = #{photoPath},
 		memo = #{memo},
-		total_calorie = #{totalCalorie},
-		protein_g
-		= #{proteinG},
+		total_calorie =
+		#{totalCalorie},
+		protein_g = #{proteinG},
 		fat_g = #{fatG},
 		carbohydrate_g = #{carbohydrateG},
 		fiber_g = #{fiberG},
-		salt_g = #{saltG},
-		cholesterol_mg =
-		#{cholesterolMg}
+		salt_g =
+		#{saltG},
+		cholesterol_mg = #{cholesterolMg}
 		WHERE id = #{id}
 	</update>
 	<update id="softDeleteById" parameterType="int">
