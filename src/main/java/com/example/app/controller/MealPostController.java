@@ -1,12 +1,20 @@
 package com.example.app.controller;
 
+import java.io.File;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.app.domain.MealPost;
 import com.example.app.domain.MealPostIngredient;
@@ -21,6 +29,8 @@ import lombok.RequiredArgsConstructor;
 @Controller
 @RequiredArgsConstructor
 public class MealPostController {
+	@Value("${upload.path}")
+    private String uploadPath;
 
 	private final MealPostService mealPostService; // ← 名前をmealPostServiceに統一
 
@@ -29,7 +39,49 @@ public class MealPostController {
 
 	@Autowired
 	private MealPostIngredientMapper mealPostIngredientMapper;
+	
+	@PostMapping("/mealPosts/save")
+	public String saveMealPost(@ModelAttribute MealPost mealPost,
+	                           @RequestParam("photoFile") MultipartFile photoFile,
+	                           HttpSession session) throws Exception {
 
+		User loginUser = (User) session.getAttribute("loginUser");
+		if (loginUser == null) {
+			return "redirect:/login";
+		}
+
+		// ファイルアップロード処理
+		if (!photoFile.isEmpty()) {
+			String uploadDir = uploadPath;
+			//uploadDir = "C:\\Users\\zd1T04\\Desktop\\test\\飯写システム\\uploads/";
+			String filename = UUID.randomUUID().toString() + "_" + photoFile.getOriginalFilename();
+			File destFile = new File(uploadDir, filename);
+			photoFile.transferTo(destFile);
+
+			// photoPathにWebアクセス用のパスを保存
+			mealPost.setPhotoPath("uploads/" + filename);
+		}
+
+		// ユーザーIDを設定
+		mealPost.setUserId(loginUser.getId());
+
+		if (mealPost.getId() == null) {
+			mealPostService.addMealPost(mealPost);
+		} else {
+			mealPostService.editMealPost(mealPost);
+		}
+		return "redirect:/mealposts";
+	}
+	
+	@GetMapping("/mealPosts/add")
+	public String addMealPostForm(Model model) {
+	    MealPost emptyPost = new MealPost();
+	    emptyPost.setMealTime(LocalDateTime.now());
+	    model.addAttribute("mealPost", emptyPost);
+	    model.addAttribute("ingredients", List.of()); // 新規なので空
+	    return "mealposts/detail";
+	}
+	
 	@GetMapping("/mealposts")
 	public String list(Model model, HttpSession session) throws Exception {
 		User loginUser = (User) session.getAttribute("loginUser");

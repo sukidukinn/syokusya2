@@ -49,4 +49,14 @@ public class LoginController {
 		session.setAttribute("loginUser", loginUser);
 		return "redirect:/mealposts";
 	}
+	
+	@GetMapping("/logout")
+	public String logout(HttpSession session) throws Exception {
+	    User loginUser = (User) session.getAttribute("loginUser");
+	    if (loginUser != null) {
+	        userService.updateLastLogout(loginUser.getId());
+	    }
+	    session.invalidate(); // セッションを無効化
+	    return "redirect:/login"; // ログイン画面にリダイレクト
+	}
 }
