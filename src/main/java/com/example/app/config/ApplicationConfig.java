@@ -12,9 +12,6 @@ public class ApplicationConfig implements WebMvcConfigurer {
 	
 	@Override
 	public void addResourceHandlers(ResourceHandlerRegistry registry) {
-
-		String uploadDir = uploadPath;
-		//uploadDir = "file:///C:/Users/zd1T04/Desktop/test/飯写システム/uploads/";
 		registry.addResourceHandler("/uploads/**").addResourceLocations("file:///" + uploadPath.replace("\\", "/"));
 	}
 }

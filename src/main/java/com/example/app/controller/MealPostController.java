@@ -30,7 +30,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MealPostController {
 	@Value("${upload.path}")
-    private String uploadPath;
+	private String uploadPath;
 
 	private final MealPostService mealPostService; // ← 名前をmealPostServiceに統一
 
@@ -39,11 +39,11 @@ public class MealPostController {
 
 	@Autowired
 	private MealPostIngredientMapper mealPostIngredientMapper;
-	
+
 	@PostMapping("/mealPosts/save")
 	public String saveMealPost(@ModelAttribute MealPost mealPost,
-	                           @RequestParam("photoFile") MultipartFile photoFile,
-	                           HttpSession session) throws Exception {
+			@RequestParam("photoFile") MultipartFile photoFile,
+			HttpSession session) throws Exception {
 
 		User loginUser = (User) session.getAttribute("loginUser");
 		if (loginUser == null) {
@@ -53,13 +53,20 @@ public class MealPostController {
 		// ファイルアップロード処理
 		if (!photoFile.isEmpty()) {
 			String uploadDir = uploadPath;
-			//uploadDir = "C:\\Users\\zd1T04\\Desktop\\test\\飯写システム\\uploads/";
 			String filename = UUID.randomUUID().toString() + "_" + photoFile.getOriginalFilename();
 			File destFile = new File(uploadDir, filename);
 			photoFile.transferTo(destFile);
 
 			// photoPathにWebアクセス用のパスを保存
 			mealPost.setPhotoPath("uploads/" + filename);
+		} else {
+			// アップロードがなければ、既存の画像を維持
+			if (mealPost.getId() != null) {
+				MealPost existing = mealPostMapper.selectById(mealPost.getId());
+				if (existing != null && existing.getPhotoPath() != null) {
+					mealPost.setPhotoPath(existing.getPhotoPath());
+				}
+			}
 		}
 
 		// ユーザーIDを設定
@@ -72,16 +79,16 @@ public class MealPostController {
 		}
 		return "redirect:/mealposts";
 	}
-	
+
 	@GetMapping("/mealPosts/add")
 	public String addMealPostForm(Model model) {
-	    MealPost emptyPost = new MealPost();
-	    emptyPost.setMealTime(LocalDateTime.now());
-	    model.addAttribute("mealPost", emptyPost);
-	    model.addAttribute("ingredients", List.of()); // 新規なので空
-	    return "mealposts/detail";
+		MealPost emptyPost = new MealPost();
+		emptyPost.setMealTime(LocalDateTime.now());
+		model.addAttribute("mealPost", emptyPost);
+		model.addAttribute("ingredients", List.of()); // 新規なので空
+		return "mealposts/detail";
 	}
-	
+
 	@GetMapping("/mealposts")
 	public String list(Model model, HttpSession session) throws Exception {
 		User loginUser = (User) session.getAttribute("loginUser");
