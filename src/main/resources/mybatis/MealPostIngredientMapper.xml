@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
 <mapper
 	namespace="com.example.app.mapper.MealPostIngredientMapper">
 
-	<select id="selectByMealPostId" resultType="MealPostIngredient"
-		parameterType="int">
-		SELECT mpi.*, nf.food_name AS nutritionFoodName
-		FROM meal_post_ingredients mpi
-		JOIN nutrition_foods nf ON mpi.nutrition_food_id = nf.id
-		WHERE mpi.meal_post_id = #{mealPostId}
-		AND mpi.deleted = false
+	<select id="selectByMealPostId"
+		resultType="com.example.app.domain.MealPostIngredient">
+		SELECT * FROM meal_post_ingredients WHERE meal_post_id = #{mealPostId}
 	</select>
+
 </mapper>

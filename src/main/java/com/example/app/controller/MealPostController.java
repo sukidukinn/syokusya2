@@ -18,9 +18,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.example.app.domain.MealPost;
 import com.example.app.domain.MealPostIngredient;
+import com.example.app.domain.NutritionFood;
 import com.example.app.domain.User;
 import com.example.app.mapper.MealPostIngredientMapper;
 import com.example.app.mapper.MealPostMapper;
+import com.example.app.mapper.NutritionFoodMapper;
 import com.example.app.service.MealPostService;
 
 import jakarta.servlet.http.HttpSession;
@@ -40,6 +42,10 @@ public class MealPostController {
 	@Autowired
 	private MealPostIngredientMapper mealPostIngredientMapper;
 
+	@Autowired
+	private NutritionFoodMapper nutritionFoodMapper;
+	
+	
 	@PostMapping("/mealPosts/save")
 	public String saveMealPost(@ModelAttribute MealPost mealPost,
 			@RequestParam("photoFile") MultipartFile photoFile,
@@ -86,6 +92,10 @@ public class MealPostController {
 		emptyPost.setMealTime(LocalDateTime.now());
 		model.addAttribute("mealPost", emptyPost);
 		model.addAttribute("ingredients", List.of()); // 新規なので空
+
+	    List<NutritionFood> nutritionFoods = nutritionFoodMapper.selectAll();
+	    model.addAttribute("nutritionFoods", nutritionFoods);
+	    
 		return "mealposts/detail";
 	}
 
@@ -107,13 +117,14 @@ public class MealPostController {
 		model.addAttribute("loginUser", loginUser);
 		return "mealposts/list";
 	}
-	
+
 	// 食事投稿削除
 	@GetMapping("/mealPosts/delete/{id}")
 	public String deleteMealPost(@PathVariable Integer id) throws Exception {
 		mealPostMapper.softDeleteById(id);
 		return "redirect:/mealposts";
 	}
+
 	// 画像のみ削除
 	@GetMapping("/mealPosts/{id}/clearImage")
 	public String clearMealPostImage(@PathVariable Integer id) throws Exception {
@@ -121,7 +132,8 @@ public class MealPostController {
 		if (post != null && post.getPhotoPath() != null) {
 			// 実ファイルも削除
 			File file = new File(uploadPath + "/" + post.getPhotoPath().replace("uploads/", ""));
-			if (file.exists()) file.delete();
+			if (file.exists())
+				file.delete();
 
 			// DB上のphotoPathをnullに更新
 			post.setPhotoPath(null);
@@ -129,18 +141,30 @@ public class MealPostController {
 		}
 		return "redirect:/mealPosts/edit/" + id;
 	}
-
 	
-
 	@GetMapping("/mealPosts/edit/{id}")
 	public String editMealPost(@PathVariable Integer id, Model model) throws Exception {
 		MealPost mealPost = mealPostMapper.selectById(id);
 		if (mealPost == null) {
 			return "redirect:/mealPosts";
 		}
-		List<MealPostIngredient> ingredients = mealPostIngredientMapper.selectByMealPostId(id);
+
+	    List<MealPostIngredient> ingredients = mealPostIngredientMapper.selectByMealPostId(id);
+	    List<NutritionFood> nutritionFoods = nutritionFoodMapper.selectAll();
+
+	    System.out.println("▼ ingredients:");
+	    for (MealPostIngredient ing : ingredients) {
+	        System.out.println("  ID=" + ing.getId() +
+		            ", postId=" + ing.getMealPostId() +
+	            ", foodId=" + ing.getNutritionFoodId() +
+	            ", grams=" + ing.getAmountGrams());
+	    }
+	    
 		model.addAttribute("mealPost", mealPost);
-		model.addAttribute("ingredients", ingredients);
+	    model.addAttribute("ingredients", ingredients);
+	    model.addAttribute("nutritionFoods", nutritionFoods);
+	    
+	    
 		return "mealposts/detail";
 	}
 }

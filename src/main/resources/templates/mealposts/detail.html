@@ -102,41 +102,161 @@
 
 	</form>
 
-	<!-- 食材一覧セクション -->
+	<div class="container">
+
+		<div class="mt-5 mb-3">
+			<h4 class="d-inline">使用食材一覧</h4>
+			<button type="button" class="btn btn-success" onclick="addIngredientRow()">＋ 食材を追加</button>
+			<label>食材検索：</label>
+			<input type="text" id="foodSearchInput" class="form-control" placeholder="例：そば" oninput="filterFoods()">
+
+			<label>食材名：</label>
+			<select id="nutritionFoodSelect" name="nutritionFoodId" class="form-select">
+				<!-- 初期描画用、JSで上書きされます -->
+			</select>
+
+		</div>
+		<h4>▼ 食事に登録された食材一覧（meal_post_ingredients）</h4>
+
+		<table class="table table-bordered table-sm">
+			<thead>
+				<tr>
+					<th>食材名</th>
+					<th>使用量(g)</th>
+					<th>カロリー</th>
+					<th>たんぱく質</th>
+					<th>脂質</th>
+					<th>炭水化物</th>
+					<th>食物繊維</th>
+					<th>塩分</th>
+					<th>コレステロール</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:if="${#lists.isEmpty(ingredients)}">
+					<td colspan="11" class="text-center">登録された食材がありません</td>
+				</tr>
+				<tr th:each="ing, idx : ${ingredients}">
+					<td>
+						<select name="nutritionFoodIds" class="form-select">
+							<option th:each="food : ${nutritionFoods}" th:value="${food.id}" th:text="${food.foodName}"
+								th:selected="${food.id == ing.nutritionFoodId}">
+							</option>
+						</select>
+					</td>
+					<td>
+						<input type="number" name="amountGrams" step="1" min="0" class="form-control"
+							th:value="${ing.amountGrams}" />
+					</td>
+					<td>0</td>
+					<td>0</td>
+					<td>0</td>
+					<td>0</td>
+					<td>0</td>
+					<td>0</td>
+					<td>0</td>
+				</tr>
+			</tbody>
+		</table>
+
+		<h4 class="mt-5">▼ 栄養食品マスタ一覧（nutrition_foods）</h4>
+		<table class="table table-bordered table-sm">
+			<thead>
+				<tr>
+					<th>ID</th>
+					<th>食品名</th>
+					<th>群</th>
+					<th>カロリー</th>
+					<th>たんぱく質</th>
+					<th>脂質</th>
+					<th>炭水化物</th>
+					<th>食物繊維</th>
+					<th>塩分</th>
+					<th>コレステロール</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="food : ${nutritionFoods}">
+					<td th:text="${food.id}"></td>
+					<td th:text="${food.foodName}"></td>
+					<td th:text="${food.groupName}"></td>
+					<td th:text="${food.energyKcal}">0</td>
+					<td th:text="${food.proteinG}">0</td>
+					<td th:text="${food.fatG}">0</td>
+					<td th:text="${food.carbohydrateG}">0</td>
+					<td th:text="${food.fiberG}">0</td>
+					<td th:text="${food.saltG}">0</td>
+					<td th:text="${food.cholesterolMg}">0</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+	<!--
 	<div class="mt-5 mb-3">
 		<h4 class="d-inline">使用食材一覧</h4>
-		<a class="btn btn-success ms-3 d-inline"
-			th:href="@{/mealPosts/{postId}/ingredients/add(postId=${mealPost.id})}">
-			＋ 食材を追加
-		</a>
+		<button type="button" class="btn btn-success" onclick="addIngredientRow()">＋ 食材を追加</button>
+		<label>食材名検索：</label>
+    	<input type="text" id="foodSearchInput" class="form-control" placeholder="例：そば" oninput="filterFoods()">
 	</div>
+
 	<table class="table">
-		<tr>
-			<th>ID</th>
-			<th>食材名</th>
-			<th>使用量 (g)</th>
-			<th>たんぱく質</th>
-			<th>脂質</th>
-			<th>炭水化物</th>
-			<th>操作</th>
-		</tr>
-		<tr th:each="ingredient : ${ingredients}">
-			<td>[[${ingredient.id}]]</td>
-			<td>[[${ingredient.nutritionFoodName}]]</td>
-			<td>[[${ingredient.amountG}]]</td>
-			<td>[[${ingredient.proteinG}]]</td>
-			<td>[[${ingredient.fatG}]]</td>
-			<td>[[${ingredient.carbohydrateG}]]</td>
-			<td>
-				<a class="btn btn-primary btn-sm"
-					th:href="@{/mealPosts/{postId}/ingredients/edit/{id}(postId=${mealPost.id}, id=${ingredient.id})}">編集</a>
-				<button class="btn btn-danger delete" th:data-href="@{/mealPosts/delete/{id}(id=${mealPost.id})}"
-					th:data-name="${mealPost.mealName}" data-bs-toggle="modal" data-bs-target="#confirm-modal">
-					削除
-				</button>
-			</td>
-		</tr>
+		<thead>
+			<tr>
+				<th>#</th>
+				<th>食材名</th>
+				<th>使用量 (g)</th>
+				<th>カロリー</th>
+				<th>たんぱく質</th>
+				<th>脂質</th>
+				<th>炭水化物</th>
+				<th>食物繊維</th>
+				<th>塩分</th>
+				<th>コレステロール</th>
+				<th>操作</th>
+			</tr>
+		</thead>
+		<tbody id="ingredientBody">
+		</tbody>
 	</table>
+
+	<h5 class="mt-4">使用食材一覧</h5>
+	<table class="table table-bordered table-striped">
+		<thead>
+			<tr>
+				<th>ID</th>
+				<th>食材名</th>
+				<th>使用量 (g)</th>
+				<th>たんぱく質</th>
+				<th>脂質</th>
+				<th>炭水化物</th>
+				<th>操作</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr th:each="ingredient : ${ingredients}">
+				<td th:text="${ingredient.id}">1</td>
+				<td th:text="${ingredient.nutritionFoodName}">アマランサス</td>
+				<td th:text="${ingredient.amountGrams}">150</td>
+				<td th:text="${ingredient.proteinG}">表示</td>
+				<td th:text="${ingredient.fatG}">表示</td>
+				<td th:text="${ingredient.carbohydrateG}">表示</td>
+				<td>
+					<a class="btn btn-primary btn-sm"
+						th:href="@{/mealPosts/{postId}/ingredients/edit/{id}(postId=${mealPost.id}, id=${ingredient.id})}">編集</a>
+
+					<button class="btn btn-danger btn-sm delete"
+						th:data-href="@{/mealPosts/{postId}/ingredients/delete/{id}(postId=${mealPost.id}, id=${ingredient.id})}"
+						th:data-name="${ingredient.nutritionFoodName}" data-bs-toggle="modal"
+						data-bs-target="#confirm-modal">
+						削除
+					</button>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+	-->
+
 
 	<!-- 戻る -->
 	<p class="mt-4">
@@ -200,6 +320,95 @@
 				container.style.display = "block";    // ラベルと枠を表示
 			};
 			reader.readAsDataURL(file);
+		}
+	</script>
+
+	<script th:inline="javascript">
+		let ingredientCounter = 0;
+		const nutritionFoods = /*[[${foodList}]]*/[];
+
+		// 栄養情報取得
+		function getNutritionById(id) {
+			return nutritionFoods.find(f => f.id === Number(id));
+		}
+
+		// 行を追加
+		function addIngredientRow() {
+			const tbody = document.getElementById("ingredientBody");
+			const row = document.createElement("tr");
+
+			const foodOptions = nutritionFoods.map(food =>
+				`<option value="${food.id}">${food.foodName}</option>`
+			).join("");
+
+			row.innerHTML = `
+			<td>${++ingredientCounter}</td>
+			<td>
+				<select name="nutritionFoodIds" class="form-select" onchange="recalculateRow(this)">
+					${foodOptions}
+				</select>
+			</td>
+			<td><input type="number" name="amountGrams" value="0" class="form-control" oninput="recalculateRow(this)" /></td>
+			<td class="kcal">0</td>
+			<td class="protein">0</td>
+			<td class="fat">0</td>
+			<td class="carb">0</td>
+			<td class="fiber">0</td>
+			<td class="salt">0</td>
+			<td class="cholesterol">0</td>
+			<td><button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">削除</button></td>
+		`;
+
+			tbody.appendChild(row);
+		}
+
+		// 栄養素再計算
+		function recalculateRow(el) {
+			const row = el.closest('tr');
+			const foodId = row.querySelector('select').value;
+			const grams = parseFloat(row.querySelector('input[name=amountGrams]').value) || 0;
+			const food = getNutritionById(foodId);
+			if (!food) return;
+
+			row.querySelector('.kcal').textContent = ((food.energyKcal || 0) * grams / 100).toFixed(2);
+			row.querySelector('.protein').textContent = ((food.proteinG || 0) * grams / 100).toFixed(2);
+			row.querySelector('.fat').textContent = ((food.fatG || 0) * grams / 100).toFixed(2);
+			row.querySelector('.carb').textContent = ((food.carbohydrateG || 0) * grams / 100).toFixed(2);
+			row.querySelector('.fiber').textContent = ((food.fiberG || 0) * grams / 100).toFixed(2);
+			row.querySelector('.salt').textContent = ((food.saltG || 0) * grams / 100).toFixed(2);
+			row.querySelector('.cholesterol').textContent = ((food.cholesterolMg || 0) * grams / 100).toFixed(2);
+		}
+	</script>
+
+	<script th:inline="javascript">
+		let allOptions = [];
+
+		document.addEventListener("DOMContentLoaded", () => {
+			// 初回レンダリング
+			allOptions = nutritionFoods.map(food => ({
+				id: food.id,
+				name: food.foodName
+			}));
+			renderDropdown(allOptions);
+		});
+
+		function filterFoods() {
+			const keyword = document.getElementById("foodSearchInput").value.trim().toLowerCase();
+			const filtered = keyword === ""
+				? allOptions
+				: allOptions.filter(f => f.name.toLowerCase().includes(keyword));
+			renderDropdown(filtered);
+		}
+
+		function renderDropdown(foodList) {
+			const select = document.getElementById("nutritionFoodSelect");
+			select.innerHTML = ""; // 一旦クリア
+			foodList.forEach(food => {
+				const option = document.createElement("option");
+				option.value = food.id;
+				option.textContent = food.name;
+				select.appendChild(option);
+			});
 		}
 	</script>
 </body>
