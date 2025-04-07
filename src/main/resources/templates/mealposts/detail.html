@@ -109,23 +109,33 @@
 
 		<div class="mt-5 mb-3">
 			<h4 class="d-inline">使用食材一覧</h4>
+			<button type="button" class="btn btn-warning" onclick="recalculateNutrition()">
+				🔢 栄養再計算
+			</button>
 			<button class="btn btn-success" onclick="addIngredientRow()">
 				＋ 食材追加
 			</button>
+
 			<button type="button" class="btn btn-secondary" onclick="reloadIngredientsFromDB()">
 				🔄 食材DB読込
 			</button>
 			<button type="button" class="btn btn-primary" onclick="submitIngredients()">
 				💾 食材DB反映
 			</button>
-			<button type="button" class="btn btn-warning" onclick="recalculateNutrition()">
-				🔢 栄養再計算
-			</button>
 			<button type="button" class="btn btn-warning" onclick="applyToMealPost()">
 				食事投稿に反映
 			</button>
+			<div class="d-flex align-items-center gap-2 mt-2">
+				<input type="text" id="foodFilterInput" class="form-control w-25" placeholder="食材フィルタ (例: そば)">
+				<label>
+					<input type="checkbox" id="foodFilterEnable" checked>
+					フィルタ反映
+				</label>
+			</div>
 		</div>
-		<h4>▼ 食事に登録された食材一覧（meal_post_ingredients）</h4>
+
+
+		<h4>食材一覧</h4>
 
 		<table class="table table-bordered">
 			<thead>
@@ -167,8 +177,13 @@
 		</table>
 
 
-		<h4 class="mt-5">▼ 栄養食品マスタ一覧（nutrition_foods）</h4>
-		<table class="table table-bordered table-sm">
+
+		<p class="mt-4">
+			<a class="btn btn-secondary" th:href="@{/mealposts}">← 更新せずに一覧へ戻る</a>
+		</p>
+
+		<h4 class="mt-5"><a href="https://www.city.osaka.lg.jp/kenko/page/0000506951.html">大阪府 日本食品標準成分表</a></h4>
+		<table class="table table-bordered table-sm" id="nutritionFoodsTable">
 			<thead>
 				<tr>
 					<th>ID</th>
@@ -181,28 +196,13 @@
 					<th>食物繊維</th>
 					<th>塩分</th>
 					<th>コレステロール</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr th:each="food : ${nutritionFoods}">
-					<td th:text="${food.id}"></td>
-					<td th:text="${food.foodName}"></td>
-					<td th:text="${food.groupName}"></td>
-					<td th:text="${food.energyKcal}">0</td>
-					<td th:text="${food.proteinG}">0</td>
-					<td th:text="${food.fatG}">0</td>
-					<td th:text="${food.carbohydrateG}">0</td>
-					<td th:text="${food.fiberG}">0</td>
-					<td th:text="${food.saltG}">0</td>
-					<td th:text="${food.cholesterolMg}">0</td>
-				</tr>
+				</tr></thead>
+			<tbody id="nutritionFoodsBody">
+				<!-- JavaScriptで描画するので中身は初期空でOK -->
 			</tbody>
 		</table>
 	</div>
 
-	<p class="mt-4">
-		<a class="btn btn-secondary" th:href="@{/mealposts}">← 更新せずに一覧へ戻る</a>
-	</p>
 	</div>
 	<script th:src="@{/js/bootstrap.bundle.min.js}"></script>
 
@@ -224,7 +224,13 @@
 			</div>
 		</div>
 	</div>
+
+
 	<script>
+		let ingredientCounter = 0;
+		const nutritionFoods = /*[[${nutritionFoods}]]*/ null || [];
+		const ingredients = /*[[${ingredients}]]*/ null || [];
+
 		document.querySelectorAll(".delete").forEach(btn =>
 			btn.addEventListener("click", e => {
 				const name = e.target.getAttribute("data-name");
@@ -233,10 +239,7 @@
 				document.getElementById("delete-yes").setAttribute("href", href);
 			})
 		);
-	</script>
 
-	<!-- ファイル選択時にプレビュー表示 -->
-	<script>
 		function previewImage(event) {
 			const reader = new FileReader();
 			reader.onload = function () {
@@ -245,8 +248,7 @@
 			};
 			reader.readAsDataURL(event.target.files[0]);
 		}
-	</script>
-	<script>
+
 		function previewImage(event) {
 			const file = event.target.files[0];
 			if (!file) return;
@@ -262,13 +264,6 @@
 			};
 			reader.readAsDataURL(file);
 		}
-	</script>
-
-
-	<script th:inline="javascript">
-		let ingredientCounter = 0;
-		const nutritionFoods = /*[[${nutritionFoods}]]*/ null || [];
-		const ingredients = /*[[${ingredients}]]*/ null || [];
 
 		// 栄養情報取得
 		function getNutritionById(id) {
@@ -315,6 +310,35 @@
 				table.appendChild(row); // 合計行がなければ末尾に追加
 			}
 		}
+
+		function getFoodOptions(selectedId = null) {
+			const filterText = document.getElementById("foodFilterInput")?.value?.toLowerCase() || "";
+			const isFilterEnabled = document.getElementById("foodFilterEnable")?.checked;
+
+			return window.nutritionFoods
+				.filter(food => {
+					if (!isFilterEnabled || !filterText) return true;
+					return food.foodName.toLowerCase().includes(filterText);
+				})
+				.map(food => {
+					const selected = food.id === selectedId || food.foodCode === selectedId ? 'selected' : '';
+					return `<option value="${food.id}" ${selected}>${food.foodName}</option>`;
+				})
+				.join("");
+		}
+
+		// 🔄 ドロップダウン再描画処理
+		function refreshDropdowns() {
+			const selects = document.querySelectorAll('select[name="nutritionFoodIds"]');
+			selects.forEach(select => {
+				const currentValue = parseInt(select.value);
+				select.innerHTML = getFoodOptions(currentValue); // フィルタを再適用
+			});
+		}
+
+		// 🧠 入力フィルタ or チェックボックスの変更でイベント発火
+		document.getElementById("foodFilterInput")?.addEventListener("input", refreshDropdowns);
+		document.getElementById("foodFilterEnable")?.addEventListener("change", refreshDropdowns);
 
 		// 削除確認 → 行削除
 		function confirmAndRemoveRow(button) {
@@ -437,11 +461,34 @@
 		}
 	</script>
 
-	<button onclick="recalculateNutrition()">再計算</button>
 	<script th:inline="javascript">
 		window.nutritionFoods = /*[[${nutritionFoods}]]*/[];
 	</script>
 	<script>
+		function getFoodOptions(selectedId) {
+			const filterEnabled = document.getElementById("foodFilterEnable")?.checked;
+			const filterText = document.getElementById("foodFilterInput")?.value?.toLowerCase() || "";
+
+			// フィルタされたリスト
+			let filtered = window.nutritionFoods;
+
+			if (filterEnabled && filterText) {
+				filtered = filtered.filter(food => food.foodName.toLowerCase().includes(filterText));
+			}
+
+			// ✅ もし選択済みがフィルタ対象に含まれていなかったら、強制的に追加
+			const selectedFood = window.nutritionFoods.find(f => f.id === selectedId);
+			if (selectedFood && !filtered.some(f => f.id === selectedId)) {
+				filtered = [selectedFood, ...filtered];
+			}
+
+			return filtered.map(food => `
+    <option value="${food.id}" ${food.id === selectedId ? "selected" : ""}>
+      ${food.foodName}
+    </option>
+  `).join("");
+		}
+
 		function recalculateNutrition() {
 			if (!window.nutritionFoods || !Array.isArray(window.nutritionFoods)) {
 				console.error("❌ nutritionFoods が定義されていない、または配列ではありません");
@@ -471,7 +518,7 @@
 
 				if (!Number.isFinite(grams)) return;
 
-				const food = window.nutritionFoods.find(f => f.id === foodId || f.foodCode === foodId);
+				const food = window.nutritionFoods.find(f => f.id === foodId); // f.id === foodId || f.foodCode === foodId
 				if (!food) return;
 
 				const ratio = grams / 100;
@@ -572,11 +619,40 @@
 			document.querySelector('input[name="fiberG"]').value = fiber;
 			document.querySelector('input[name="saltG"]').value = salt;
 			document.querySelector('input[name="cholesterolMg"]').value = cholesterol;
+		}
 
-			console.log("✅ 合計値を食事投稿に反映しました:", {
-				calorie, protein, fat, carbs, fiber, salt, cholesterol
+		//栄養価一覧のフィル表示処理
+		function renderNutritionFoodsTable(filterText = "") {
+			const tbody = document.getElementById("nutritionFoodsBody");
+			tbody.innerHTML = ""; // 一度クリア
+
+			const filtered = window.nutritionFoods.filter(food =>
+				food.foodName.includes(filterText)
+			);
+
+			filtered.forEach(food => {
+				const tr = document.createElement("tr");
+				tr.innerHTML = `
+				<td>${food.id}</td>
+				<td>${food.foodName}</td>
+				<td>${food.groupName}</td>
+				<td>${food.energyKcal}</td>
+				<td>${food.proteinG}</td>
+				<td>${food.fatG}</td>
+				<td>${food.carbohydrateG}</td>
+				<td>${food.fiberG}</td>
+				<td>${food.saltG}</td>
+				<td>${food.cholesterolMg}</td>
+			`;
+				tbody.appendChild(tr);
 			});
 		}
+		
+		document.getElementById("foodFilterInput").addEventListener("input", e => {
+			const keyword = e.target.value.trim();
+			renderNutritionFoodsTable(keyword);
+		});
+		renderNutritionFoodsTable(""); 
 	</script>
 </body>
 
