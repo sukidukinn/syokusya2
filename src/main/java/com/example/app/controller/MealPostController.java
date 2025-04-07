@@ -7,13 +7,16 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.example.app.domain.MealPost;
@@ -44,8 +47,7 @@ public class MealPostController {
 
 	@Autowired
 	private NutritionFoodMapper nutritionFoodMapper;
-	
-	
+
 	@PostMapping("/mealPosts/save")
 	public String saveMealPost(@ModelAttribute MealPost mealPost,
 			@RequestParam("photoFile") MultipartFile photoFile,
@@ -93,9 +95,9 @@ public class MealPostController {
 		model.addAttribute("mealPost", emptyPost);
 		model.addAttribute("ingredients", List.of()); // 新規なので空
 
-	    List<NutritionFood> nutritionFoods = nutritionFoodMapper.selectAll();
-	    model.addAttribute("nutritionFoods", nutritionFoods);
-	    
+		List<NutritionFood> nutritionFoods = nutritionFoodMapper.selectAll();
+		model.addAttribute("nutritionFoods", nutritionFoods);
+
 		return "mealposts/detail";
 	}
 
@@ -141,7 +143,7 @@ public class MealPostController {
 		}
 		return "redirect:/mealPosts/edit/" + id;
 	}
-	
+
 	@GetMapping("/mealPosts/edit/{id}")
 	public String editMealPost(@PathVariable Integer id, Model model) throws Exception {
 		MealPost mealPost = mealPostMapper.selectById(id);
@@ -149,22 +151,46 @@ public class MealPostController {
 			return "redirect:/mealPosts";
 		}
 
-	    List<MealPostIngredient> ingredients = mealPostIngredientMapper.selectByMealPostId(id);
-	    List<NutritionFood> nutritionFoods = nutritionFoodMapper.selectAll();
+		List<MealPostIngredient> ingredients = mealPostIngredientMapper.selectByMealPostId(id);
+		List<NutritionFood> nutritionFoods = nutritionFoodMapper.selectAll();
 
-	    System.out.println("▼ ingredients:");
-	    for (MealPostIngredient ing : ingredients) {
-	        System.out.println("  ID=" + ing.getId() +
+		/*
+		System.out.println("▼ ingredients:");
+		for (MealPostIngredient ing : ingredients) {
+		    System.out.println("  ID=" + ing.getId() +
 		            ", postId=" + ing.getMealPostId() +
-	            ", foodId=" + ing.getNutritionFoodId() +
-	            ", grams=" + ing.getAmountGrams());
-	    }
-	    
+		        ", foodId=" + ing.getNutritionFoodId() +
+		        ", grams=" + ing.getAmountGrams());
+		}
+		*/
+
 		model.addAttribute("mealPost", mealPost);
-	    model.addAttribute("ingredients", ingredients);
-	    model.addAttribute("nutritionFoods", nutritionFoods);
-	    
-	    
+		model.addAttribute("ingredients", ingredients);
+		model.addAttribute("nutritionFoods", nutritionFoods);
+
 		return "mealposts/detail";
+	}
+	
+	@GetMapping("/mealPosts/{mealPostId}/ingredients")
+	@ResponseBody
+	public List<MealPostIngredient> getIngredients(@PathVariable Integer mealPostId) {
+	    return mealPostIngredientMapper.selectByMealPostId(mealPostId);
+	}
+	@PostMapping("/mealPosts/updateIngredients")
+	@ResponseBody
+	public ResponseEntity<String> updateIngredients(@RequestBody List<MealPostIngredient> ingredients) {
+		if (ingredients == null || ingredients.isEmpty()) {
+			return ResponseEntity.badRequest().body("空のデータです");
+		}
+
+		Integer mealPostId = ingredients.get(0).getMealPostId();
+
+		// 一度削除してから再登録（シンプルな方式）
+		mealPostIngredientMapper.deleteByMealPostId(mealPostId);
+		for (MealPostIngredient ing : ingredients) {
+			mealPostIngredientMapper.insert(ing);
+		}
+
+		return ResponseEntity.ok("登録完了");
 	}
 }
