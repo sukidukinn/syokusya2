@@ -67,37 +67,40 @@
 					<div class="mb-2">
 						<label>カロリー：</label>
 						<input type="number" th:field="*{totalCalorie}" step="0.01" class="form-control">
+						<label>総重量 (g)：</label>
+						<input type="number" th:field="*{totalGrams}" step="0.1" class="form-control">
 					</div>
-					<div class="row">
-						<div class="col">
-							<label>たんぱく質：</label>
-							<input type="number" th:field="*{proteinG}" step="0.01" class="form-control">
-						</div>
-						<div class="col">
-							<label>脂質：</label>
-							<input type="number" th:field="*{fatG}" step="0.01" class="form-control">
-						</div>
-						<div class="col">
-							<label>炭水化物：</label>
-							<input type="number" th:field="*{carbohydrateG}" step="0.01" class="form-control">
-						</div>
+				</div>
+				<div class="row">
+					<div class="col">
+						<label>たんぱく質：</label>
+						<input type="number" th:field="*{proteinG}" step="0.01" class="form-control">
 					</div>
-					<div class="row mt-2">
-						<div class="col">
-							<label>食物繊維：</label>
-							<input type="number" th:field="*{fiberG}" step="0.01" class="form-control">
-						</div>
-						<div class="col">
-							<label>塩分：</label>
-							<input type="number" th:field="*{saltG}" step="0.01" class="form-control">
-						</div>
-						<div class="col">
-							<label>コレステロール：</label>
-							<input type="number" th:field="*{cholesterolMg}" step="0.01" class="form-control">
-						</div>
+					<div class="col">
+						<label>脂質：</label>
+						<input type="number" th:field="*{fatG}" step="0.01" class="form-control">
+					</div>
+					<div class="col">
+						<label>炭水化物：</label>
+						<input type="number" th:field="*{carbohydrateG}" step="0.01" class="form-control">
+					</div>
+				</div>
+				<div class="row mt-2">
+					<div class="col">
+						<label>食物繊維：</label>
+						<input type="number" th:field="*{fiberG}" step="0.01" class="form-control">
+					</div>
+					<div class="col">
+						<label>塩分：</label>
+						<input type="number" th:field="*{saltG}" step="0.01" class="form-control">
+					</div>
+					<div class="col">
+						<label>コレステロール：</label>
+						<input type="number" th:field="*{cholesterolMg}" step="0.01" class="form-control">
 					</div>
 				</div>
 			</div>
+		</div>
 		</div>
 
 	</form>
@@ -552,6 +555,7 @@
 
 			// 合計行の値取得
 			const calorie = getCellValue("calories");
+			const grams = getCellValue("grams");
 			const protein = getCellValue("protein");
 			const fat = getCellValue("fat");
 			const carbs = getCellValue("carbs");
@@ -561,6 +565,7 @@
 
 			// 入力フォームに反映
 			document.querySelector('input[name="totalCalorie"]').value = calorie;
+			document.querySelector('input[name="totalGrams"]').value = grams;
 			document.querySelector('input[name="proteinG"]').value = protein;
 			document.querySelector('input[name="fatG"]').value = fat;
 			document.querySelector('input[name="carbohydrateG"]').value = carbs;
