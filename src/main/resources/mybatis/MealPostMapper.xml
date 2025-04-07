@@ -22,6 +22,7 @@
 		photo_path,
 		memo,
 		total_calorie,
+        total_grams,
 		protein_g,
 		fat_g,
 		carbohydrate_g,
@@ -45,14 +46,14 @@
 	<insert id="insert" parameterType="MealPost">
 		INSERT INTO meal_posts (
 		user_id, meal_name, meal_time, photo_path, memo,
-		total_calorie,
+		total_calorie, total_grams, 
 		protein_g, fat_g, carbohydrate_g,
 		fiber_g, salt_g, cholesterol_mg,
 		created
 		) VALUES (
 		#{userId}, #{mealName}, #{mealTime}, #{photoPath},
 		#{memo},
-		#{totalCalorie}, #{proteinG}, #{fatG}, #{carbohydrateG},
+		#{totalCalorie}, #{totalGrams}, #{proteinG}, #{fatG}, #{carbohydrateG},
 		#{fiberG}, #{saltG}, #{cholesterolMg}, NOW()
 		)
 	</insert>
@@ -66,8 +67,8 @@
 		meal_time = #{mealTime},
 		photo_path = #{photoPath},
 		memo = #{memo},
-		total_calorie =
-		#{totalCalorie},
+		total_calorie = #{totalCalorie},
+        total_grams = #{totalGrams},
 		protein_g = #{proteinG},
 		fat_g = #{fatG},
 		carbohydrate_g = #{carbohydrateG},
