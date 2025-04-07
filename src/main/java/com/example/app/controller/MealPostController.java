@@ -1,7 +1,9 @@
 package com.example.app.controller;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -170,12 +172,13 @@ public class MealPostController {
 
 		return "mealposts/detail";
 	}
-	
+
 	@GetMapping("/mealPosts/{mealPostId}/ingredients")
 	@ResponseBody
 	public List<MealPostIngredient> getIngredients(@PathVariable Integer mealPostId) {
-	    return mealPostIngredientMapper.selectByMealPostId(mealPostId);
+		return mealPostIngredientMapper.selectByMealPostId(mealPostId);
 	}
+
 	@PostMapping("/mealPosts/updateIngredients")
 	@ResponseBody
 	public ResponseEntity<String> updateIngredients(@RequestBody List<MealPostIngredient> ingredients) {
@@ -192,5 +195,43 @@ public class MealPostController {
 		}
 
 		return ResponseEntity.ok("登録完了");
+	}
+
+	@PostMapping("/mealPosts/{mealPostId}/ingredients/update")
+	@ResponseBody
+	public ResponseEntity<String> updateIngredients(
+			@PathVariable Integer mealPostId,
+			@RequestParam("nutritionFoodIds") List<Integer> foodIds,
+			@RequestParam("amountGrams") List<Double> grams) {
+		if (foodIds == null || grams == null || foodIds.size() != grams.size()) {
+			return ResponseEntity.badRequest().body("データ不正（サイズ不一致）");
+		}
+
+		List<MealPostIngredient> ingredients = new ArrayList<>();
+
+		for (int i = 0; i < foodIds.size(); i++) {
+			MealPostIngredient ing = new MealPostIngredient();
+			ing.setMealPostId(mealPostId);
+			ing.setNutritionFoodId(foodIds.get(i));
+
+			Double gramValue = grams.get(i);
+			if (gramValue == null) {
+				System.out.println("⚠️ grams[" + i + "] が null です");
+				continue;
+			}
+
+			Double gram = grams.get(i);
+			if (gram != null) {
+				ing.setAmountGrams(BigDecimal.valueOf(gram));
+			}
+			ingredients.add(ing);
+		}
+
+		mealPostIngredientMapper.deleteByMealPostId(mealPostId);
+		for (MealPostIngredient ing : ingredients) {
+			mealPostIngredientMapper.insert(ing);
+		}
+
+		return ResponseEntity.ok("食材情報を保存しました");
 	}
 }
