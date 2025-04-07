@@ -106,9 +106,21 @@
 
 		<div class="mt-5 mb-3">
 			<h4 class="d-inline">使用食材一覧</h4>
-			<button class="btn btn-success" onclick="addIngredientRow()">食材追加</button>
-			<button type="button" class="btn btn-secondary" onclick="reloadIngredientsFromDB()">食材DB読込</button>
-			<button type="button" class="btn btn-primary" onclick="submitIngredients()">食材更新（DB反映）</button>
+			<button class="btn btn-success" onclick="addIngredientRow()">
+				＋ 食材追加
+			</button>
+			<button type="button" class="btn btn-secondary" onclick="reloadIngredientsFromDB()">
+				🔄 食材DB読込
+			</button>
+			<button type="button" class="btn btn-primary" onclick="submitIngredients()">
+				💾 食材DB反映
+			</button>
+			<button type="button" class="btn btn-warning" onclick="recalculateNutrition()">
+				🔢 栄養再計算
+			</button>
+			<button type="button" class="btn btn-warning" onclick="applyToMealPost()">
+				食事投稿に反映
+			</button>
 		</div>
 		<h4>▼ 食事に登録された食材一覧（meal_post_ingredients）</h4>
 
@@ -129,8 +141,26 @@
 				</tr>
 			</thead>
 			<tbody id="ingredientTable">
-				<!-- JSで行が追加される -->
+				<!-- JSで追加される行のテンプレート例 -->
+				<tr>
+					<td>1</td>
+					<td>（select）</td>
+					<td><input type="number" /></td>
+					<td class="calories">0</td>
+					<td class="protein">0</td>
+					<td class="fat">0</td>
+					<td class="carbs">0</td>
+					<td class="fiber">0</td>
+					<td class="salt">0</td>
+					<td class="cholesterol">0</td>
+					<td><button>削除</button></td>
+				</tr>
 			</tbody>
+			<tfoot>
+				<tr id="ingredientTotalRow">
+					<!-- 合計がここに入る -->
+				</tr>
+			</tfoot>
 		</table>
 
 
@@ -232,7 +262,6 @@
 	</script>
 
 
-
 	<script th:inline="javascript">
 		let ingredientCounter = 0;
 		const nutritionFoods = /*[[${nutritionFoods}]]*/ null || [];
@@ -264,19 +293,24 @@
     <td>
       <input type="number" name="amountGrams" class="form-control" value="${ingredient.amountGrams || 0}" min="0" step="1" />
     </td>
-    <td class="kcal">0</td>
-    <td class="protein">0</td>
-    <td class="fat">0</td>
-    <td class="carb">0</td>
-    <td class="fiber">0</td>
-    <td class="salt">0</td>
-    <td class="cholesterol">0</td>
+    <td class="calories">0.0</td>
+    <td class="protein">0.0</td>
+    <td class="fat">0.0</td>
+    <td class="carbs">0.0</td>
+    <td class="fiber">0.0</td>
+    <td class="salt">0.00</td>
+    <td class="cholesterol">0.0</td>
     <td>
       <button type="button" class="btn btn-danger btn-sm" onclick="confirmAndRemoveRow(this)">削除</button>
     </td>
   `;
 
-			table.appendChild(row);
+			const totalRow = document.getElementById("totalRow");
+			if (totalRow) {
+				table.insertBefore(row, totalRow); // 合計行の直前に追加
+			} else {
+				table.appendChild(row); // 合計行がなければ末尾に追加
+			}
 		}
 
 		// 削除確認 → 行削除
@@ -296,46 +330,6 @@
 			ingredients.forEach(addIngredientRow);
 		}
 
-		// サーバーへ保存（POST送信）
-		function submitIngredients() {
-			const postId = /*[[${mealPost.id}]]*/ 0;
-
-			const rows = document.querySelectorAll('#ingredientTableBody tr');
-			const foodIds = [];
-			const grams = [];
-
-			rows.forEach(row => {
-				const foodId = row.querySelector('select').value;
-				const gram = row.querySelector('input[name="amountGrams"]').value;
-				foodIds.push(foodId);
-				grams.push(gram);
-			});
-
-			// フォーム送信
-			const form = document.createElement('form');
-			form.method = 'POST';
-			form.action = `/mealPosts/${postId}/ingredients/update`;
-
-			foodIds.forEach(id => {
-				const input = document.createElement('input');
-				input.type = 'hidden';
-				input.name = 'nutritionFoodIds';
-				input.value = id;
-				form.appendChild(input);
-			});
-
-			grams.forEach(g => {
-				const input = document.createElement('input');
-				input.type = 'hidden';
-				input.name = 'amountGrams';
-				input.value = g;
-				form.appendChild(input);
-			});
-
-			document.body.appendChild(form);
-			form.submit();
-		}
-
 		// 初回表示
 		window.addEventListener("DOMContentLoaded", () => {
 			reloadIngredientsFromDB();
@@ -345,32 +339,42 @@
 	<!-- 食材一覧の更新、取得 -->
 	<script th:inline="javascript">
 		function submitIngredients() {
-			const rows = document.querySelectorAll("#ingredientTable tr");
-			const mealPostId = /*[[${mealPost.id}]]*/ 0;
+			const postId = /*[[${mealPost.id}]]*/ 0;
 
-			const ingredients = Array.from(rows).map(row => {
+			const rows = Array.from(document.querySelectorAll('#ingredientTable tr'))
+				.filter(row => row.querySelector('select')); // 合計行を除く
+
+			const ingredients = rows.map(row => {
+				const nutritionFoodId = parseInt(row.querySelector('select').value);
+				const amountGrams = parseFloat(row.querySelector('input[name="amountGrams"]').value);
+
 				return {
-					mealPostId: mealPostId,
-					nutritionFoodId: parseInt(row.querySelector('select[name="nutritionFoodIds"]').value),
-					amountGrams: parseFloat(row.querySelector('input[name="amountGrams"]').value) || 0
+					mealPostId: postId,
+					nutritionFoodId,
+					amountGrams
 				};
 			});
 
-			fetch('/mealPosts/updateIngredients', {
-				method: 'POST',
-				headers: {'Content-Type': 'application/json'},
+			console.log("🔄 送信データ:", ingredients);
+
+			fetch("/mealPosts/updateIngredients", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json"
+				},
 				body: JSON.stringify(ingredients)
 			})
-				.then(res => {
-					if (res.ok) {
-						alert("食材情報をDBに反映しました！");
-					} else {
-						alert("保存中にエラーが発生しました。");
-					}
+				.then(response => {
+					if (!response.ok) throw new Error("サーバーエラー");
+					return response.text();
+				})
+				.then(message => {
+					alert("✅ 食材情報を保存しました");
+					console.log("📦 サーバーからのレスポンス:", message);
 				})
 				.catch(err => {
-					console.error(err);
-					alert("通信エラーが発生しました。");
+					console.error("❌ 保存に失敗しました", err);
+					alert("⚠️ 保存に失敗しました");
 				});
 		}
 	</script>
@@ -378,18 +382,195 @@
 		const mealPostId = /*[[${mealPost.id}]]*/ 0;
 
 		function reloadIngredientsFromDB() {
+			const mealPostId = /*[[${mealPost.id}]]*/ 0;
+
 			fetch(`/mealPosts/${mealPostId}/ingredients`)
 				.then(res => res.json())
 				.then(data => {
-					// テーブルを初期化
-					document.getElementById("ingredientTable").innerHTML = "";
+					const table = document.getElementById("ingredientTable");
+					table.innerHTML = "";
 					ingredientCounter = 0;
-					data.forEach(ing => addIngredientRow(ing));
+
+					// 追加 → 栄養計算のため一時的に合計用に集計
+					let total = {
+						grams: 0,
+						calories: 0,
+						protein: 0,
+						fat: 0,
+						carbs: 0,
+						fiber: 0,
+						salt: 0,
+						cholesterol: 0
+					};
+
+					data.forEach(ing => {
+						addIngredientRow(ing);
+
+						const food = window.nutritionFoods.find(f => f.id === ing.nutritionFoodId || f.foodCode === ing.nutritionFoodId);
+						if (food) {
+							const ratio = ing.amountGrams / 100;
+							total.grams += ing.amountGrams;
+							total.calories += food.energyKcal * ratio;
+							total.protein += food.proteinG * ratio;
+							total.fat += food.fatG * ratio;
+							total.carbs += food.carbohydrateG * ratio;
+							total.fiber += food.fiberG * ratio;
+							total.salt += food.saltG * ratio;
+							total.cholesterol += food.cholesterolMg * ratio;
+						}
+					});
+
+					// 栄養再計算を実行して、各行のセルに数値を入れる
+					recalculateNutrition();
+
+					// 合計行を追加
+					appendTotalRow(total);
+					console.log("✅ DB読み込み後に合計行を追加しました", total);
 				})
 				.catch(err => {
-					console.error(err);
+					console.error("❌ DB読み込みエラー:", err);
 					alert("DB読み込みエラーが発生しました。");
 				});
+		}
+	</script>
+
+	<button onclick="recalculateNutrition()">再計算</button>
+	<script th:inline="javascript">
+		window.nutritionFoods = /*[[${nutritionFoods}]]*/[];
+	</script>
+	<script>
+		function recalculateNutrition() {
+			if (!window.nutritionFoods || !Array.isArray(window.nutritionFoods)) {
+				console.error("❌ nutritionFoods が定義されていない、または配列ではありません");
+				return;
+			}
+
+			const tableRows = document.querySelectorAll("#ingredientTable tr");
+
+			// 合計値初期化
+			let totalGrams = 0;
+			let totalCalories = 0;
+			let totalProtein = 0;
+			let totalFat = 0;
+			let totalCarbs = 0;
+			let totalFiber = 0;
+			let totalSalt = 0;
+			let totalCholesterol = 0;
+
+			tableRows.forEach((row, index) => {
+				const select = row.querySelector('select[name="nutritionFoodIds"]');
+				const input = row.querySelector('input[name="amountGrams"]');
+
+				if (!select || !input) return;
+
+				const foodId = parseInt(select.value);
+				const grams = parseFloat(input.value);
+
+				if (!Number.isFinite(grams)) return;
+
+				const food = window.nutritionFoods.find(f => f.id === foodId || f.foodCode === foodId);
+				if (!food) return;
+
+				const ratio = grams / 100;
+
+				// 栄養素を表示
+				row.querySelector('.calories').textContent = (food.energyKcal * ratio).toFixed(1);
+				row.querySelector('.protein').textContent = (food.proteinG * ratio).toFixed(1);
+				row.querySelector('.fat').textContent = (food.fatG * ratio).toFixed(1);
+				row.querySelector('.carbs').textContent = (food.carbohydrateG * ratio).toFixed(1);
+				row.querySelector('.fiber').textContent = (food.fiberG * ratio).toFixed(1);
+				row.querySelector('.salt').textContent = (food.saltG * ratio).toFixed(2);
+				row.querySelector('.cholesterol').textContent = (food.cholesterolMg * ratio).toFixed(1);
+
+				// 合計に加算
+				totalGrams += grams;
+				totalCalories += food.energyKcal * ratio;
+				totalProtein += food.proteinG * ratio;
+				totalFat += food.fatG * ratio;
+				totalCarbs += food.carbohydrateG * ratio;
+				totalFiber += food.fiberG * ratio;
+				totalSalt += food.saltG * ratio;
+				totalCholesterol += food.cholesterolMg * ratio;
+			});
+
+			appendTotalRow({
+				grams: totalGrams,
+				calories: totalCalories,
+				protein: totalProtein,
+				fat: totalFat,
+				carbs: totalCarbs,
+				fiber: totalFiber,
+				salt: totalSalt,
+				cholesterol: totalCholesterol
+			});
+		}
+
+		function appendTotalRow({
+			grams, calories, protein, fat, carbs, fiber, salt, cholesterol
+		}) {
+			const oldRow = document.getElementById("totalRow");
+			if (oldRow) oldRow.remove();
+
+			const tbody = document.getElementById("ingredientTable");
+
+			const tr = document.createElement("tr");
+			tr.id = "totalRow";
+			tr.style.backgroundColor = "#f0f0f0";
+			tr.style.fontWeight = "bold";
+			tr.innerHTML = `
+    <td colspan="2" class="text-end">合計</td>
+    <td class="grams">${grams.toFixed(1)} g</td>
+    <td class="calories">${calories.toFixed(1)}</td>
+    <td class="protein">${protein.toFixed(1)}</td>
+    <td class="fat">${fat.toFixed(1)}</td>
+    <td class="carbs">${carbs.toFixed(1)}</td>
+    <td class="fiber">${fiber.toFixed(1)}</td>
+    <td class="salt">${salt.toFixed(2)}</td>
+    <td class="cholesterol">${cholesterol.toFixed(1)}</td>
+    <td></td>
+  `;
+			tbody.appendChild(tr);
+		}
+
+		function applyToMealPost() {
+			const totalRow = document.getElementById("totalRow");
+			if (!totalRow) {
+				alert("⚠️ 合計行が見つかりません。先に『再計算』してください。");
+				return;
+			}
+
+			const getCellValue = (className) => {
+				const cell = totalRow.querySelector(`.${className}`);
+				if (!cell) {
+					console.warn(`⚠️ セル .${className} が見つかりません`);
+					return 0;
+				}
+				const value = parseFloat(cell.textContent);
+				console.log(`📦 ${className} = ${value}`);
+				return isNaN(value) ? 0 : value;
+			};
+
+			// 合計行の値取得
+			const calorie = getCellValue("calories");
+			const protein = getCellValue("protein");
+			const fat = getCellValue("fat");
+			const carbs = getCellValue("carbs");
+			const fiber = getCellValue("fiber");
+			const salt = getCellValue("salt");
+			const cholesterol = getCellValue("cholesterol");
+
+			// 入力フォームに反映
+			document.querySelector('input[name="totalCalorie"]').value = calorie;
+			document.querySelector('input[name="proteinG"]').value = protein;
+			document.querySelector('input[name="fatG"]').value = fat;
+			document.querySelector('input[name="carbohydrateG"]').value = carbs;
+			document.querySelector('input[name="fiberG"]').value = fiber;
+			document.querySelector('input[name="saltG"]').value = salt;
+			document.querySelector('input[name="cholesterolMg"]').value = cholesterol;
+
+			console.log("✅ 合計値を食事投稿に反映しました:", {
+				calorie, protein, fat, carbs, fiber, salt, cholesterol
+			});
 		}
 	</script>
 </body>
