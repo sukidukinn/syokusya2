@@ -10,7 +10,9 @@
 <body>
 	<form th:action="@{/mealPosts/save}" th:object="${mealPost}" method="post" enctype="multipart/form-data">
 		<input type="hidden" th:field="*{id}">
-
+		<div th:if="${pageMessage != null and !#strings.isEmpty(pageMessage)}" class="alert alert-info"
+			th:text="${pageMessage}">
+		</div>
 		<div class="card mb-4">
 			<div class="row g-0">
 				<!-- 左側：画像 -->
@@ -33,8 +35,8 @@
 
 					<!-- 保存ボタン -->
 					<div class="mt-3 d-flex gap-3">
-						<!-- 保存ボタン（左寄せ） -->
-						<button type="submit" class="btn btn-primary">更新して戻る</button>
+						<button type="submit" name="action" value="save" class="btn btn-primary">保存して戻る</button>
+						<button type="submit" name="action" value="saveOnly" class="btn btn-secondary">保存のみ</button>
 
 						<!-- 画像削除ボタン（GETで画像のみクリア） -->
 						<a th:if="${mealPost.id != null}" th:href="@{/mealPosts/{id}/clearImage(id=${mealPost.id})}"
@@ -179,7 +181,7 @@
 
 
 		<p class="mt-4">
-			<a class="btn btn-secondary" th:href="@{/mealposts}">← 更新せずに一覧へ戻る</a>
+			<a class="btn btn-secondary" th:href="@{/mealposts}">← 保存しないで戻る</a>
 		</p>
 
 		<h4 class="mt-5"><a href="https://www.city.osaka.lg.jp/kenko/page/0000506951.html">大阪府 日本食品標準成分表</a></h4>
@@ -196,12 +198,15 @@
 					<th>食物繊維</th>
 					<th>塩分</th>
 					<th>コレステロール</th>
-				</tr></thead>
+				</tr>
+			</thead>
 			<tbody id="nutritionFoodsBody">
 				<!-- JavaScriptで描画するので中身は初期空でOK -->
 			</tbody>
 		</table>
 	</div>
+
+	<div id="paginationControls" class="mt-3 d-flex justify-content-center"></div>
 
 	</div>
 	<script th:src="@{/js/bootstrap.bundle.min.js}"></script>
@@ -647,12 +652,142 @@
 				tbody.appendChild(tr);
 			});
 		}
-		
+
 		document.getElementById("foodFilterInput").addEventListener("input", e => {
 			const keyword = e.target.value.trim();
 			renderNutritionFoodsTable(keyword);
 		});
 		renderNutritionFoodsTable(""); 
+	</script>
+
+	<!-- ページネーション（指定件数を超える場合はページ番号を表示するロジック） -->
+	<script>
+		const itemsPerPage = 30; // 1ページの表示件数
+		const pageRangeAround = 2;      // 現在ページの前後に表示するページ数
+		let currentPage = 1; // 現在のページ
+
+		function renderNutritionFoodsPage(filterText = "", page = 1) {
+			const tbody = document.getElementById("nutritionFoodsBody");
+			tbody.innerHTML = "";
+
+			const filtered = window.nutritionFoods.filter(food =>
+				food.foodName.includes(filterText)
+			);
+
+			const totalPages = Math.ceil(filtered.length / itemsPerPage);
+			currentPage = Math.min(Math.max(1, page), totalPages); // 安全チェック
+
+			const startIndex = (currentPage - 1) * itemsPerPage;
+			const paginatedFoods = filtered.slice(startIndex, startIndex + itemsPerPage);
+
+			paginatedFoods.forEach(food => {
+				const tr = document.createElement("tr");
+				tr.innerHTML = `
+				<td>${food.id}</td>
+				<td>${food.foodName}</td>
+				<td>${food.groupName}</td>
+				<td>${food.energyKcal}</td>
+				<td>${food.proteinG}</td>
+				<td>${food.fatG}</td>
+				<td>${food.carbohydrateG}</td>
+				<td>${food.fiberG}</td>
+				<td>${food.saltG}</td>
+				<td>${food.cholesterolMg}</td>
+			`;
+				tbody.appendChild(tr);
+			});
+
+			renderPaginationControls(totalPages, filterText);
+		}
+
+		function renderPaginationControls(totalPages, filterText) {
+			const container = document.getElementById("paginationControls");
+			container.innerHTML = "";
+
+			if (totalPages <= 1) return;
+
+			const ul = document.createElement("ul");
+			ul.className = "pagination";
+
+			// « 前へ
+			ul.appendChild(createPageButton("«", currentPage > 1, () => {
+				renderNutritionFoodsPage(filterText, currentPage - 1);
+			}));
+
+			const addPage = (i, isActive = false) => {
+				ul.appendChild(createPageButton(i, true, () => {
+					renderNutritionFoodsPage(filterText, i);
+				}, isActive));
+			};
+
+			// 1ページ目と省略記号
+			if (currentPage > 1 + pageRangeAround) {
+				addPage(1);
+				if (currentPage > 2 + pageRangeAround) {
+					addEllipsis(ul);
+				}
+			}
+
+			// 中央の前後ページ
+			for (let i = currentPage - pageRangeAround; i <= currentPage + pageRangeAround; i++) {
+				if (i >= 1 && i <= totalPages) {
+					addPage(i, i === currentPage);
+				}
+			}
+
+			// 最後のページと省略記号
+			if (currentPage < totalPages - pageRangeAround) {
+				if (currentPage < totalPages - pageRangeAround - 1) {
+					addEllipsis(ul);
+				}
+				addPage(totalPages);
+			}
+
+			// » 次へ
+			ul.appendChild(createPageButton("»", currentPage < totalPages, () => {
+				renderNutritionFoodsPage(filterText, currentPage + 1);
+			}));
+
+			container.appendChild(ul);
+		}
+
+		function addEllipsis(ul) {
+			const li = document.createElement("li");
+			li.className = "page-item disabled";
+			li.innerHTML = `<span class="page-link">…</span>`;
+			ul.appendChild(li);
+		}
+
+		function createPageButton(label, enabled, onClick, isActive = false) {
+			const li = document.createElement("li");
+			li.className = `page-item ${!enabled ? "disabled" : ""} ${isActive ? "active" : ""}`;
+
+			const a = document.createElement("a");
+			a.className = "page-link";
+			a.href = "#";
+			a.textContent = label;
+
+			if (enabled) {
+				a.addEventListener("click", e => {
+					e.preventDefault();
+					onClick();
+				});
+			}
+
+			li.appendChild(a);
+			return li;
+		}
+
+		// 入力フィルタで再描画（ページ1に戻す）
+		document.getElementById("foodFilterInput").addEventListener("input", e => {
+			const keyword = e.target.value.trim();
+			renderNutritionFoodsPage(keyword, 1);
+		});
+
+		// 初期表示
+		window.addEventListener("DOMContentLoaded", () => {
+			renderNutritionFoodsPage("", 1);
+		});
 	</script>
 </body>
 

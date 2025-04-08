@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.app.domain.MealPost;
 import com.example.app.domain.MealPostIngredient;
@@ -50,46 +51,53 @@ public class MealPostController {
 	@Autowired
 	private NutritionFoodMapper nutritionFoodMapper;
 
+	//保存処理
 	@PostMapping("/mealPosts/save")
 	public String saveMealPost(@ModelAttribute MealPost mealPost,
-			@RequestParam("photoFile") MultipartFile photoFile,
-			HttpSession session) throws Exception {
+	                           @RequestParam("photoFile") MultipartFile photoFile,
+	                           @RequestParam(value = "action", required = false) String action,
+	                           HttpSession session,
+	                           Model model) throws Exception {
+	    User loginUser = (User) session.getAttribute("loginUser");
+	    if (loginUser == null) {
+	        System.out.println("🚫 ログイン情報がありません");
+	        return "redirect:/login";
+	    }
 
-		User loginUser = (User) session.getAttribute("loginUser");
-		if (loginUser == null) {
-			return "redirect:/login";
-		}
+	    // ファイルアップロード処理
+	    if (!photoFile.isEmpty()) {
+	        String filename = UUID.randomUUID().toString() + "_" + photoFile.getOriginalFilename();
+	        File destFile = new File(uploadPath, filename);
+	        photoFile.transferTo(destFile);
+	        mealPost.setPhotoPath("uploads/" + filename);
+	    } else if (mealPost.getId() != null) {
+	        MealPost existing = mealPostMapper.selectById(mealPost.getId());
+	        if (existing != null && existing.getPhotoPath() != null) {
+	            mealPost.setPhotoPath(existing.getPhotoPath());
+	        }
+	    }
 
-		// ファイルアップロード処理
-		if (!photoFile.isEmpty()) {
-			String uploadDir = uploadPath;
-			String filename = UUID.randomUUID().toString() + "_" + photoFile.getOriginalFilename();
-			File destFile = new File(uploadDir, filename);
-			photoFile.transferTo(destFile);
+	    mealPost.setUserId(loginUser.getId());
 
-			// photoPathにWebアクセス用のパスを保存
-			mealPost.setPhotoPath("uploads/" + filename);
-		} else {
-			// アップロードがなければ、既存の画像を維持
-			if (mealPost.getId() != null) {
-				MealPost existing = mealPostMapper.selectById(mealPost.getId());
-				if (existing != null && existing.getPhotoPath() != null) {
-					mealPost.setPhotoPath(existing.getPhotoPath());
-				}
-			}
-		}
+	    if (mealPost.getId() == null) {
+	        mealPostService.addMealPost(mealPost);
+	    } else {
+	        mealPostService.editMealPost(mealPost);
+	    }
 
-		// ユーザーIDを設定
-		mealPost.setUserId(loginUser.getId());
-
-		if (mealPost.getId() == null) {
-			mealPostService.addMealPost(mealPost);
-		} else {
-			mealPostService.editMealPost(mealPost);
-		}
-		return "redirect:/mealposts";
+	    // 保存だけならstay、戻るならredirect
+	    if ("saveOnly".equals(action)) {
+	        MealPost updated = mealPostMapper.selectById(mealPost.getId());
+	        model.addAttribute("mealPost", updated);
+	        model.addAttribute("nutritionFoods", nutritionFoodMapper.selectAll());
+	        model.addAttribute("mealPostIngredients", mealPostIngredientMapper.selectByMealPostId(mealPost.getId()));
+	        model.addAttribute("pageMessage", "食事情報を保存しました");
+	        return "mealposts/detail";
+	    } else {
+	        return "redirect:/mealposts";
+	    }
 	}
-
+	//食事投稿追加処理
 	@GetMapping("/mealPosts/add")
 	public String addMealPostForm(Model model) {
 		MealPost emptyPost = new MealPost();
@@ -103,6 +111,7 @@ public class MealPostController {
 		return "mealposts/detail";
 	}
 
+	//一覧表示処理
 	@GetMapping("/mealposts")
 	public String list(Model model, HttpSession session) throws Exception {
 		User loginUser = (User) session.getAttribute("loginUser");
@@ -131,7 +140,8 @@ public class MealPostController {
 
 	// 画像のみ削除
 	@GetMapping("/mealPosts/{id}/clearImage")
-	public String clearMealPostImage(@PathVariable Integer id) throws Exception {
+	public String clearMealPostImage(@PathVariable Integer id,
+			RedirectAttributes redirectAttributes) throws Exception {
 		MealPost post = mealPostMapper.selectById(id);
 		if (post != null && post.getPhotoPath() != null) {
 			// 実ファイルも削除
@@ -142,6 +152,8 @@ public class MealPostController {
 			// DB上のphotoPathをnullに更新
 			post.setPhotoPath(null);
 			mealPostMapper.update(post);
+			
+			redirectAttributes.addFlashAttribute("pageMessage", "画像を削除しました");
 		}
 		return "redirect:/mealPosts/edit/" + id;
 	}
