@@ -157,19 +157,6 @@
 			</thead>
 			<tbody id="ingredientTable">
 				<!-- JSで追加される行のテンプレート例 -->
-				<tr>
-					<td>1</td>
-					<td>（select）</td>
-					<td><input type="number" /></td>
-					<td class="calories">0</td>
-					<td class="protein">0</td>
-					<td class="fat">0</td>
-					<td class="carbs">0</td>
-					<td class="fiber">0</td>
-					<td class="salt">0</td>
-					<td class="cholesterol">0</td>
-					<td><button>削除</button></td>
-				</tr>
 			</tbody>
 			<tfoot>
 				<tr id="ingredientTotalRow">
@@ -414,7 +401,10 @@
 		const mealPostId = /*[[${mealPost.id}]]*/ 0;
 
 		function reloadIngredientsFromDB() {
-			const mealPostId = /*[[${mealPost.id}]]*/ 0;
+			if (!mealPostId || mealPostId === 0) {
+				console.log("⚠️ 新規作成中のため、DB読み込みスキップ");
+				return;
+			}
 
 			fetch(`/mealPosts/${mealPostId}/ingredients`)
 				.then(res => res.json())
