@@ -147,11 +147,11 @@
 				</div>
 				<div class="mb-3">
 					<label>減量増量開始日</label>
-					<input type="date" class="form-control" th:field="*{startDate}">
+					<input type="date" class="form-control" name="startDate" th:field="*{startDate}">
 				</div>
 
 				<div class="mb-3">
-					<label>目標日数（日数）</label>
+					<label>目標達成までの日数</label>
 					<input type="number" id="targetDays" class="form-control" th:field="*{targetDays}">
 				</div>
 
@@ -210,9 +210,9 @@
 
 				<li class="list-group-item">目標との差: <span id="weightDiffGoal" class="text-danger fw-bold">-</span> kg
 				</li>
-				<li class="list-group-item">カロリー差: <span id="totalCalorieDiff"
+				<li class="list-group-item">減量カロリー数: <span id="totalCalorieDiff"
 						class="text-danger fw-bold">-</span> kcal</li>
-				<li class="list-group-item">1日あたりの調整目安: <span id="dailyCalorieDiff" class="text-danger fw-bold">-</span>
+				<li class="list-group-item">1日あたりの消費・減量カロリー数: <span id="dailyCalorieDiff" class="text-danger fw-bold">-</span>
 					kcal</li>
 
 
@@ -253,7 +253,7 @@
 			const sex = parseInt(document.getElementById('sex')?.value); // 0: 男性, 1: 女性
 			const goalWeight = parseFloat(document.querySelector('[name="goalWeightKg"]')?.value) || 0;
 			const activityLevel = parseFloat(document.getElementById('activityLevel')?.value) || 1.2;
-			const targetDays = parseInt(document.getElementById('activityLevel')?.value) || 90;
+			const targetDays = parseInt(document.getElementById('targetDays')?.value) || 90;
 
 			if (height <= 0 || weight <= 0 || isNaN(sex)) return;
 
@@ -288,10 +288,10 @@
 			// TDEE 総消費カロリー
 			const tdee = bmr * activityLevel;
 			document.getElementById('tdeeDisplay').textContent = tdee.toFixed(2);
-			const tdeeHidden2 = document.getElementById('tdeeHidden');
-			if (tdeeHidden2) tdeeHidden.value = tdee.toFixed(2);
+			const tdeeHidden = document.getElementById('tdeeHidden');
+			if (tdeeHidden) tdeeHidden.value = tdee.toFixed(2);
 
-			// 食事バランス
+			// 食事バランス(表示するだけの参考項目)
 			const morningRate = 0.25, noonRate = 0.35, nightRate = 0.40;
 			const totalWeight = weight * 10;
 			const morningCal = tdee * morningRate;
@@ -320,11 +320,9 @@
 			const weightDiffHidden = document.getElementById('weightDiffHidden');
 			if (weightDiffHidden) weightDiffHidden.value = weightDiffGoal.toFixed(1);
 
-
 			// 総カロリー差 = 差分kg × 7200kcal
 			const totalCalorieDiff = weightDiffGoal * 7200;
 			document.getElementById('totalCalorieDiff').textContent = totalCalorieDiff.toFixed(0);
-
 			const dailyCalorieDiff = totalCalorieDiff / targetDays;
 			document.getElementById('dailyCalorieDiff').textContent = dailyCalorieDiff.toFixed(0);
 

@@ -20,12 +20,12 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public void updateLastLogin(int userId) {
-		userMapper.updateLastLogin(userId);
+	public void updateLastLogin(int id) {
+	    userMapper.updateLastLogin(id);
 	}
 
 	@Override
-	public void updateLastLogout(int userId) {
-		userMapper.updateLastLogout(userId);
+	public void updateLastLogout(int id) {
+	    userMapper.updateLastLogout(id);
 	}
 }

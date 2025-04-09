@@ -55,6 +55,8 @@ public class LoginController {
 	        return "login";
 	    }
 
+	    userService.updateLastLogin(loginUser.getId());
+	    
 	    // 4. 正常なログイン処理
 	    session.setAttribute("loginUser", loginUser);
 	    return "redirect:/mealposts";

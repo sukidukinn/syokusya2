@@ -1,6 +1,7 @@
 package com.example.app.controller;
 
 import java.io.File;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import org.mindrot.jbcrypt.BCrypt;
@@ -81,7 +82,9 @@ public class UserController {
 		if (!model.containsAttribute("pageMessage")) {
 			model.addAttribute("pageMessage", "");
 		}
-
+		
+		System.out.println("📥 プロフィール更新リクエスト: " + user);
+		
 		return "profile";
 	}
 
@@ -138,8 +141,14 @@ public class UserController {
 			user.setPhotoPath(loginUser.getPhotoPath()); // 既存画像を維持
 		}
 
+		if (user.getStartDate() != null && user.getTargetDays() != null) {
+			LocalDate goalDate = user.getStartDate().plusDays(user.getTargetDays());
+			user.setGoalDate(goalDate);
+		}
+		// 更新
 		userMapper.updateUser(user);
-		session.setAttribute("loginUser", user);
+		User updatedUser = userMapper.selectById(user.getId());
+		session.setAttribute("loginUser", updatedUser);
 
 		if ("saveAndBack".equals(action)) {
 			redirectAttrs.addFlashAttribute("pageMessage", "プロフィールを更新しました");
