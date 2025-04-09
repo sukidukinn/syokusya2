@@ -21,11 +21,16 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public void updateLastLogin(int id) {
-	    userMapper.updateLastLogin(id);
+		userMapper.updateLastLogin(id);
 	}
 
 	@Override
 	public void updateLastLogout(int id) {
-	    userMapper.updateLastLogout(id);
+		userMapper.updateLastLogout(id);
+	}
+
+	@Override
+	public User findById(int id) {
+		return userMapper.selectById(id);
 	}
 }

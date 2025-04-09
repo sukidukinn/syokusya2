@@ -93,13 +93,14 @@
 			}
 		}
 	</style>
+	<link rel='stylesheet' href='/webjars/fullcalendar/3.10.2/dist/fullcalendar.css' />
 </head>
 
 <body>
 	<div class="container">
 		<h1 class="mt-4">食写一覧</h1>
 		<!-- 操作に応じたメッセージを表示:start -->
-		<div class="alert alert-success mt-4">
+		<div hidden class="alert alert-success mt-4">
 			食写を追加しました等、操作に応じたメッセージ
 		</div>
 
@@ -113,6 +114,49 @@
 			<a class="btn btn-secondary" th:href="@{/logout}">ログアウト</a>
 			<a class="btn btn-outline-secondary" th:href="@{/profile}">プロフィール編集</a>
 		</p>
+
+		<div class="alert alert-info">
+			<p>💪 こんにちは [[${session.loginUser.nickname}]] さん！ 今日も頑張りましょう！</p>
+
+			<p>
+				🎯 目標体重: <strong>[[${session.loginUser.goalWeightKg}]]</strong> kg<br>
+				📊 理想体重 (BMI22): <strong>[[${session.loginUser.idealWeightKg}]]</strong> kg<br>
+				📉 現在との差分: <strong>[[${session.loginUser.weightDiffKg}]]</strong> kg
+			</p>
+
+			<p>
+				🔥 基礎代謝 (BMR): <strong>[[${session.loginUser.bmr}]]</strong> kcal<br>
+				🚶‍♂️ 総消費カロリー (TDEE): <strong class="text-danger">[[${session.loginUser.tdee}]]</strong> kcal
+			</p>
+
+			<p>
+				🥗 目標摂取カロリー: <strong>[[${session.loginUser.calorieGoal}]]</strong> kcal<br>
+				🍽️ 本日の摂取合計: <strong th:text="${totalCalorie}">0</strong> kcal
+			</p>
+
+			<p>
+				📆 減量開始日: <strong>[[${session.loginUser.startDate}]]</strong><br>
+				🎯 目標達成日: <strong>[[${session.loginUser.goalDate}]]</strong><br>
+				🗓️ 目標日数: <strong>[[${session.loginUser.targetDays}]]</strong> 日
+			</p>
+
+			<p th:if="${totalCalorie > session.loginUser.tdee}" class="text-danger fw-bold">
+				⚠️ 本日の摂取カロリーがTDEEを超えています！
+			</p>
+			<p th:unless="${totalCalorie > session.loginUser.tdee}" class="text-success fw-bold">
+				✅ 本日の摂取カロリーは目標内です！
+			</p>
+		</div>
+
+		<!-- カレンダーの表示 -->
+		<div class="container mt-4">
+			<div id="calendar"></div>
+		</div>
+
+		<!-- FullCalendar JSライブラリ -->
+		<script src="/webjars/jquery/3.6.4/jquery.min.js"></script>
+		<script src="/webjars/moment/2.29.1/min/moment.min.js"></script>
+		<script src="/webjars/fullcalendar/3.10.2/dist/fullcalendar.js"></script>
 
 		<!-- 操作に応じたメッセージを表示:end -->
 		<p>
@@ -179,21 +223,6 @@
 		</div>
 		<script th:src="@{/js/bootstrap.bundle.min.js}"></script>
 
-
-		<script>nt
-				.querySelectorAll(".delete")
-				.forEach(btn => btn.addEventListener("click", e => {
-					const name = e.target.getAttribute("data-name");
-					document
-						.getElementById("delete-name")
-						.textContent = name;
-					const href = e.target.getAttribute("data-href");
-					document
-						.getElementById("delete-yes")
-						.setAttribute("href", href);
-				}));
-		</script>>
-
 		<script th:inline="javascript">
 			const columnWidths = [
 				"50px",   // ID
@@ -212,24 +241,6 @@
 				"80px",   // 編集
 				"80px"    // 削除
 			];
-
-			const headerTitles = [
-				"ID", "食事名", "食事時間", "写真", "メモ",
-				"カロリー(kcal)", "たんぱく質(g)", "脂質(g)",
-				"炭水化物(g)", "食物繊維(g)", "塩分(g)", "コレステロール(mg)",
-				"登録日時", "操作1", "操作2"
-			];
-
-			function renderHeaderRow() {
-				const headerRow = document.getElementById("mealPostsHeaderRow");
-				headerRow.innerHTML = "";
-
-				headerTitles.forEach((title) => {
-					const th = document.createElement("th");
-					th.textContent = title;
-					headerRow.appendChild(th);
-				});
-			}
 			function renderMealPosts(posts) {
 				tbody.innerHTML = "";
 
@@ -271,10 +282,6 @@
 					tbody.appendChild(tr);
 				});
 			}
-			window.addEventListener("DOMContentLoaded", () => {
-				renderHeaderRow();       // ← ヘッダー描画
-				renderMealPosts(mealPosts); // ← データ描画
-			});
 
 			const mealPosts = /*[[${mealPosts}]]*/[];
 			const tbody = document.getElementById("mealPostsBody");
@@ -510,6 +517,26 @@
 			// 初期表示
 			window.addEventListener("DOMContentLoaded", () => {
 				renderMealPostPage();
+			});
+		</script>
+
+		<script>
+			$(document).ready(function () {
+				$('#calendar').fullCalendar({
+					locale: 'ja',
+					height: 600,
+					header: {
+						left: 'prev,next today',
+						center: 'title',
+						right: 'month'
+					},
+					events: {
+						url: '/api/events/all'
+					},
+					eventClick: function (event) {
+						alert('イベント: ' + event.title);
+					}
+				});
 			});
 		</script>
 </body>

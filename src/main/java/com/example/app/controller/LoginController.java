@@ -1,6 +1,5 @@
 package com.example.app.controller;
 
-
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -33,43 +32,45 @@ public class LoginController {
 
 	@PostMapping("/login")
 	public String login(@ModelAttribute("loginMember") @Valid LoginForm form,
-	                    BindingResult result,
-	                    HttpSession session) {
+			BindingResult result,
+			HttpSession session) {
 
-	    if (result.hasErrors()) {
-	        return "login";
-	    }
+		if (result.hasErrors()) {
+			return "login";
+		}
 
-	    // 1. 入力されたメールアドレスに一致するユーザーを取得
-	    User loginUser = userService.findByEmail(form.getEmail());
+		// メールアドレスで仮ユーザー取得（パスワード検証用）
+		User loginUser = userService.findByEmail(form.getEmail());
 
-	    // 2. ユーザーが存在しない、またはパスワードが一致しない場合
-	    if (loginUser == null || !BCrypt.checkpw(form.getPassword(), loginUser.getPassword())) {
-	        result.reject("login.failed", "メールアドレスまたはパスワードが正しくありません");
-	        return "login";
-	    }
+		if (loginUser == null || !BCrypt.checkpw(form.getPassword(), loginUser.getPassword())) {
+			result.reject("login.failed", "メールアドレスまたはパスワードが正しくありません");
+			return "login";
+		}
 
-	    // 3. 退会済みか確認（typeId = 4 のユーザー）
-	    if (loginUser.getTypeId() != null && loginUser.getTypeId() == 4) {
-	        result.reject("login.retired", "このアカウントは退会済みです。アカウント復活をご希望の場合は syokusya@gmail.com にお問い合わせください。");
-	        return "login";
-	    }
+		if (loginUser.getTypeId() != null && loginUser.getTypeId() == 4) {
+			result.reject("login.retired", "このアカウントは退会済みです。復活希望は syokusya@gmail.com まで。");
+			return "login";
+		}
 
-	    userService.updateLastLogin(loginUser.getId());
-	    
-	    // 4. 正常なログイン処理
-	    session.setAttribute("loginUser", loginUser);
-	    return "redirect:/mealposts";
+		// ログイン時刻を更新
+		userService.updateLastLogin(loginUser.getId());
+
+		// ⭐ 最新のユーザー情報を再取得（TDEEなど含む）
+		User freshUser = userService.findById(loginUser.getId());
+
+		// セッションに保存
+		session.setAttribute("loginUser", freshUser);
+
+		return "redirect:/mealposts";
 	}
 
-	
 	@GetMapping("/logout")
 	public String logout(HttpSession session) throws Exception {
-	    User loginUser = (User) session.getAttribute("loginUser");
-	    if (loginUser != null) {
-	        userService.updateLastLogout(loginUser.getId());
-	    }
-	    session.invalidate(); // セッションを無効化
-	    return "redirect:/login"; // ログイン画面にリダイレクト
+		User loginUser = (User) session.getAttribute("loginUser");
+		if (loginUser != null) {
+			userService.updateLastLogout(loginUser.getId());
+		}
+		session.invalidate(); // セッションを無効化
+		return "redirect:/login"; // ログイン画面にリダイレクト
 	}
 }
