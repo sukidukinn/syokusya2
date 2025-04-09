@@ -52,7 +52,8 @@
 		sex = #{sex}, height_cm = #{heightCm}, weight_kg = #{weightKg},
 		goal_weight_kg = #{goalWeightKg}, bmi = #{bmi}, bmr = #{bmr},
 		activity_level = #{activityLevel}, bio = #{bio},
-		nickname = #{nickname}, photo_path = #{photoPath}
+		nickname = #{nickname}, photo_path = #{photoPath},
+        deleted = #{deleted}
 		WHERE id = #{id}
 	</update>
 

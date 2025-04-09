@@ -5,97 +5,283 @@
 	<meta charset="UTF-8">
 	<title>プロフィール編集</title>
 	<link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+	<style>
+		body {
+			padding: 20px;
+		}
+
+		:root {
+			--health-box-width: 300px;
+			--breakpoint: 600px;
+			/* 👈 ← ここで調整可能に！ */
+		}
+
+		.sticky-health-box {
+			position: sticky;
+			top: 100px;
+			width: var(--health-box-width);
+			max-width: 100%;
+			padding: 20px;
+			background: #f8f9fa;
+			border: 1px solid #ccc;
+			border-radius: 8px;
+		}
+
+		@media screen and (max-width: 600px) {
+			.sticky-health-box {
+				position: static;
+				width: 100%;
+				margin-top: 20px;
+			}
+
+			.form-layout {
+				flex-direction: column;
+			}
+		}
+
+		.form-layout {
+			display: flex;
+			gap: 20px;
+			align-items: flex-start;
+		}
+
+		.form-left {
+			flex: 1;
+		}
+	</style>
+
+
 </head>
 
 <body>
-	<div class="container mt-4">
-		<div th:if="${pageMessage}" class="alert alert-success">[[${pageMessage}]]</div>
-		<h2>プロフィール編集</h2>
-		<div class="mt-3">
-			<button type="submit" name="action" value="save" class="btn btn-primary">保存のみ</button>
-			<button type="submit" name="action" value="saveAndBack" class="btn btn-success ms-2">保存して戻る</button>
-			<a th:href="@{/mealPosts}" class="btn btn-secondary">戻る</a>
+	<h2>プロフィール編集</h2>
+
+
+	<div class="row">
+		<!-- 左側：プロフィールフォーム -->
+		<div class="col-md-6">
+			<form th:action="@{/profile/update}" th:object="${user}" method="post" id="profileForm">
+				<div class="mb-3">
+					<label>名前</label>
+					<input type="text" class="form-control" th:field="*{name}">
+					<div class="text-danger" th:errors="*{name}"></div>
+				</div>
+				<div class="mb-3">
+					<label>ニックネーム</label>
+					<input type="text" class="form-control" th:field="*{nickname}">
+				</div>
+				<div class="mb-3">
+					<label>年齢</label>
+					<input type="number" id="age" class="form-control" th:field="*{age}">
+					<div class="text-danger" th:errors="*{age}"></div>
+				</div>
+				<div class="mb-3">
+					<label>住所</label>
+					<input type="text" class="form-control" th:field="*{address}">
+				</div>
+				<div class="mb-3">
+					<label>性別</label>
+					<select class="form-select" id="sex" th:field="*{sex}">
+						<option value="0">男性</option>
+						<option value="1">女性</option>
+						<option value="2">その他</option>
+					</select>
+				</div>
+				<div class="mb-3" hidden>
+					<label>会員種別</label>
+					<select class="form-select" th:field="*{typeId}">
+						<option value="1">通常</option>
+						<option value="2">プレミアム</option>
+						<option value="3">運営</option>
+						<option value="4">脱退</option>
+					</select>
+				</div>
+				<div class="mb-3">
+					<label>身長 (cm)</label>
+					<input type="number" class="form-control" id="heightCm" th:field="*{heightCm}">
+				</div>
+				<div class="mb-3">
+					<label>体重 (kg)</label>
+					<input type="number" class="form-control" id="weightKg" th:field="*{weightKg}">
+				</div>
+				<div class="mb-3">
+					<label>目標体重 (kg)</label>
+					<input type="number" class="form-control" th:field="*{goalWeightKg}">
+				</div>
+				<div class="mb-3">
+					<label>活動レベル（1.0〜2.5）</label>
+					<input type="number" step="0.01" class="form-control" id="activityLevel"
+						th:field="*{activityLevel}">
+				</div>
+				<div class="mb-3">
+					<label>自己紹介</label>
+					<textarea class="form-control" rows="3" th:field="*{bio}"></textarea>
+				</div>
+				<div class="mb-3">
+					<label>メールアドレス</label>
+					<input type="email" class="form-control" th:field="*{email}">
+					<div class="text-danger" th:errors="*{email}"></div>
+				</div>
+				<div class="mb-3">
+					<label>パスワード</label>
+					<input type="password" class="form-control" th:field="*{password}">
+				</div>
+
+				<!-- フォーム内に追加 -->
+				<input type="hidden" name="bmi" id="bmiHidden" th:field="*{bmi}">
+				<input type="hidden" name="bmr" id="bmrHidden" th:field="*{bmr}">
+				<input type="hidden" name="tdee" id="tdeeHidden">
+			</form>
 		</div>
 
-		<!-- 入力フォーム -->
-		<form th:action="@{/profile/update}" th:object="${user}" method="post">
-			<div class="mb-3">
-				<label>名前</label>
-				<input type="text" class="form-control" th:field="*{name}">
-				<div class="text-danger" th:errors="*{name}"></div>
+		<!-- 右側：健康データ（追従させる） -->
+		<div class="col-md-6">
+			<div th:if="${pageMessage != null and !#strings.isEmpty(pageMessage)}" class="alert alert-success">
+				[[${pageMessage}]]
 			</div>
 
-			<div class="mb-3">
-				<label>ニックネーム</label>
-				<input type="text" class="form-control" th:field="*{nickname}">
-			</div>
+			<div class="sticky-health-box">
+				<div>
+					<button form="profileForm" type="submit" name="action" value="save"
+						class="btn btn-primary">更新</button>
+					<button form="profileForm" type="submit" name="action" value="saveAndBack"
+						class="btn btn-success ms-2" hidden>保存して戻る</button>
+					<a th:href="@{/mealPosts}" class="btn btn-secondary">戻る</a>
+					<button type="button" class="btn btn-danger ms-2" onclick="confirmWithdrawal()">退会</button>
+				</div>
+				<hr>
 
-			<div class="mb-3">
-				<label>年齢</label>
-				<input type="number" class="form-control" th:field="*{age}">
-				<div class="text-danger" th:errors="*{age}"></div>
-			</div>
+				<h4>健康データ</h4>
+				<li class="list-group-item">BMI: <span id="bmiDisplay" class="text-danger fw-bold">-</span></li>
+				<li class="list-group-item">基礎代謝 (BMR): <span id="bmrDisplay" class="text-danger fw-bold">-</span>
+					kcal</li>
+				<li class="list-group-item">総消費カロリー (TDEE): <span id="tdeeDisplay" class="text-danger fw-bold">-</span>
+					kcal</li>
+				<li class="list-group-item">推奨たんぱく質: <span id="proteinDisplay" class="text-danger fw-bold">-</span>
+					g</li>
+				<li class="list-group-item">推奨水分量: <span id="waterDisplay" class="text-danger fw-bold">-</span> ml
+				</li>
+				<p class="text-muted small">
+					※ <a href="https://keisan.casio.jp/exec/system/1567491116" target="_blank"
+						rel="noopener noreferrer">健康指針</a>に基づく推定
+				</p>
 
-			<div class="mb-3">
-				<label>住所</label>
-				<input type="text" class="form-control" th:field="*{address}">
+				<hr>
+				<h4>食事タイミング別の目安</h4>
+				<li class="list-group-item">
+					朝食(25%): <span id="calorieMorning" class="text-danger fw-bold">-</span> kcal /
+					<span id="weightMorning" class="text-danger fw-bold">-</span> g
+				</li>
+				<li class="list-group-item">
+					昼食(35%): <span id="calorieNoon" class="text-danger fw-bold">-</span> kcal /
+					<span id="weightNoon" class="text-danger fw-bold">-</span> g
+				</li>
+				<li class="list-group-item">
+					夕食(40%): <span id="calorieDinner" class="text-danger fw-bold">-</span> kcal /
+					<span id="weightDinner" class="text-danger fw-bold">-</span> g
+				</li>
+				<p class="text-muted small">
+					牛丼: 495 kcal<br />かけそば: 371 kcal<br />ご飯200g: 312 kcal<br />
+					<a href="https://www.tanita.co.jp/magazine/column/4861/" target="_blank"
+						rel="noopener noreferrer">摂取カロリー早見表</a>参照
+				</p>
 			</div>
-
-			<div class="mb-3">
-				<label>性別</label>
-				<select class="form-select" th:field="*{sex}">
-					<option value="0">男性</option>
-					<option value="1">女性</option>
-					<option value="2">その他</option>
-				</select>
-			</div>
-
-			<div class="mb-3">
-				<label>会員種別</label>
-				<select class="form-select" th:field="*{typeId}">
-					<option value="1">通常</option>
-					<option value="2">プレミアム</option>
-					<option value="3">運営</option>
-				</select>
-			</div>
-
-			<div class="mb-3">
-				<label>身長 (cm)</label>
-				<input type="number" class="form-control" th:field="*{heightCm}">
-			</div>
-
-			<div class="mb-3">
-				<label>体重 (kg)</label>
-				<input type="number" class="form-control" th:field="*{weightKg}">
-			</div>
-
-			<div class="mb-3">
-				<label>目標体重 (kg)</label>
-				<input type="number" class="form-control" th:field="*{goalWeightKg}">
-			</div>
-
-			<div class="mb-3">
-				<label>活動レベル（1.0〜2.5）</label>
-				<input type="number" step="0.01" class="form-control" th:field="*{activityLevel}">
-			</div>
-
-			<div class="mb-3">
-				<label>自己紹介</label>
-				<textarea class="form-control" rows="3" th:field="*{bio}"></textarea>
-			</div>
-
-			<div class="mb-3">
-				<label>メールアドレス</label>
-				<input type="email" class="form-control" th:field="*{email}">
-				<div class="text-danger" th:errors="*{email}"></div>
-			</div>
-
-			<div class="mb-3">
-				<label>パスワード</label>
-				<input type="password" class="form-control" th:field="*{password}">
-			</div>
-		</form>
+		</div>
 	</div>
+
+	<script>
+		function confirmWithdrawal() {
+			if (confirm("本当に退会しますか？退会するとログインできなくなります。")) {
+				location.href = "/profile/withdraw";
+			}
+		}
+
+		function updateHealthInfo() {
+			const height = parseFloat(document.getElementById('heightCm')?.value) || 0;
+			const weight = parseFloat(document.getElementById('weightKg')?.value) || 0;
+			const age = parseInt(document.getElementById('age')?.value) || 0;
+			const sex = parseInt(document.getElementById('sex')?.value); // 0: 男性, 1: 女性
+			const activityLevel = parseFloat(document.getElementById('activityLevel')?.value) || 1.2;
+
+			// BMI計算
+			const bmi = height > 0 ? (weight / ((height / 100) ** 2)) : 0;
+			document.getElementById('bmiDisplay').textContent = bmi.toFixed(2);
+
+			// 代謝計算 ハリス・ベネディクト方程式(改良版)
+			let bmr = 0;
+			if (!isNaN(sex)) {
+				if (sex === 0) { // 男性
+					bmr = 13.397 * weight + 4.799 * height - 5.677 * age + 88.362;
+				} else if (sex === 1) { // 女性
+					bmr = 9.247 * weight + 3.098 * height - 4.330 * age + 447.593;
+				} else {
+					// その他の場合、男女平均として男性式と女性式の平均を使う
+					const maleBmr = 13.397 * weight + 4.799 * height - 5.677 * age + 88.362;
+					const femaleBmr = 9.247 * weight + 3.098 * height - 4.330 * age + 447.593;
+					bmr = (maleBmr + femaleBmr) / 2;
+				}
+				document.getElementById('bmrDisplay').textContent = bmr.toFixed(2);
+			}
+
+			// TDEE（総消費カロリー）
+			const tdee = bmr * activityLevel;
+			document.getElementById('tdeeDisplay').textContent = tdee.toFixed(2);
+
+			// 推奨たんぱく質（例：体重 × 1.2g）
+			const protein = weight * 1.2;
+			document.getElementById('proteinDisplay').textContent = protein.toFixed(1);
+
+			// 推奨水分量（例：体重 × 35ml）
+			const water = weight * 35;
+			document.getElementById('waterDisplay').textContent = water.toFixed(0);
+
+			// 朝昼晩の比率
+			const morningRate = 0.25;
+			const noonRate = 0.35;
+			const nightRate = 0.40;
+
+			// 食材の1日想定重量（目安）：体重 × 10g（例: 60kg → 600g）
+			const totalWeight = weight * 10;
+
+			// 各タイミングのカロリーと重量を算出
+			const morningCal = tdee * morningRate;
+			const noonCal = tdee * noonRate;
+			const nightCal = tdee * nightRate;
+
+			const morningWeight = totalWeight * morningRate;
+			const noonWeight = totalWeight * noonRate;
+			const nightWeight = totalWeight * nightRate;
+
+			// 表示更新
+			document.getElementById('calorieMorning').textContent = morningCal.toFixed(0);
+			document.getElementById('calorieNoon').textContent = noonCal.toFixed(0);
+			document.getElementById('calorieDinner').textContent = nightCal.toFixed(0);
+
+			document.getElementById('weightMorning').textContent = morningWeight.toFixed(0);
+			document.getElementById('weightNoon').textContent = noonWeight.toFixed(0);
+			document.getElementById('weightDinner').textContent = nightWeight.toFixed(0);
+
+			//DB更新用の非表示フォームに記載
+			document.getElementById('bmiHidden').value = bmi.toFixed(2);
+			document.getElementById('bmrHidden').value = bmr.toFixed(2);
+			document.getElementById('tdeeHidden').value = tdee.toFixed(2);
+		}
+
+		// 変更イベントにバインド
+		window.addEventListener('DOMContentLoaded', () => {
+			const inputsToWatch = ['age', 'sex', 'heightCm', 'weightKg', 'activityLevel'];
+			inputsToWatch.forEach(id => {
+				const el = document.getElementById(id);
+				if (el) {
+					el.addEventListener('input', updateHealthInfo);
+					el.addEventListener('change', updateHealthInfo);
+				}
+			});
+
+			updateHealthInfo(); // 初期描画も実行
+		});
+	</script>
+
 </body>
 
 </html>
