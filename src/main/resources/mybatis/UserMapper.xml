@@ -5,20 +5,26 @@
 
 	<select id="findByEmail"
 		resultType="com.example.app.domain.User" parameterType="string">
-		SELECT id, name, email, password, nickname, photo_path,
-		type_id, sex, age, address, height_cm, weight_kg,
-		goal_weight_kg, bmi, bmr, activity_level, bio,
+		SELECT id,
+		name, email, password, nickname, photo_path,
+		type_id, sex, age,
+		address, height_cm, weight_kg,
+		goal_weight_kg, bmi, bmr,
+		activity_level, bio,
 		created, last_login, last_logout, deleted
-		FROM users
-		WHERE email = #{email} AND deleted = FALSE
+		FROM
+		users
+		WHERE email = #{email}
 	</select>
 
 	<update id="updateLastLogin" parameterType="int">
-		UPDATE users SET last_login = NOW() WHERE id = #{id}
+		UPDATE users SET
+		last_login = NOW() WHERE id = #{id}
 	</update>
 
 	<update id="updateLastLogout" parameterType="int">
-		UPDATE users SET last_logout = NOW() WHERE id = #{id}
+		UPDATE users SET
+		last_logout = NOW() WHERE id = #{id}
 	</update>
 
 	<select id="selectUsers"
@@ -28,37 +34,92 @@
 
 	<select id="selectById" parameterType="int"
 		resultType="com.example.app.domain.User">
-		SELECT * FROM users WHERE id = #{id}
+		SELECT
+		id, name, email, password, nickname, photo_path,
+		type_id, sex, age,
+		address,
+		height_cm, weight_kg, goal_weight_kg,
+		ideal_weight_kg,
+		weight_diff_kg, bmi, bmr, tdee, calorie_goal,
+		target_days, start_date,
+		goal_date, progress_photo_path,
+		activity_level, bio,
+		created,
+		last_login, last_logout, deleted
+		FROM users
+		WHERE id = #{id}
 	</select>
 
 	<insert id="addUser" parameterType="com.example.app.domain.User">
 		INSERT INTO users (
-		name, age, address, type_id, sex, height_cm, weight_kg,
-		goal_weight_kg, bmi, bmr, activity_level, bio,
+		name, age, address, type_id, sex,
+		height_cm, weight_kg,
+		goal_weight_kg, ideal_weight_kg, weight_diff_kg,
+		bmi, bmr, tdee,
+		calorie_goal,
+		target_days, start_date, goal_date, progress_photo_path,
+		activity_level, bio,
 		email, password, nickname, photo_path,
-		deleted, created
+		deleted,
+		created
 		) VALUES (
-		#{name}, #{age}, #{address}, #{typeId}, #{sex}, #{heightCm}, #{weightKg},
-		#{goalWeightKg}, #{bmi}, #{bmr}, #{activityLevel}, #{bio},
-		#{email}, #{password}, #{nickname}, #{photoPath},
+		#{name}, #{age}, #{address}, #{typeId}, #{sex},
+		#{heightCm},
+		#{weightKg},
+		#{goalWeightKg}, #{idealWeightKg}, #{weightDiffKg},
+		#{bmi}, #{bmr}, #{tdee}, #{calorieGoal},
+		#{targetDays}, #{startDate},
+		#{goalDate}, #{progressPhotoPath},
+		#{activityLevel}, #{bio},
+		#{email},
+		#{password}, #{nickname}, #{photoPath},
 		FALSE, NOW()
 		)
 	</insert>
 
-	<update id="updateUser"
-		parameterType="com.example.app.domain.User">
+	<update id="updateUser" parameterType="User">
 		UPDATE users SET
-		name = #{name}, age = #{age}, address = #{address}, type_id = #{typeId},
-		sex = #{sex}, height_cm = #{heightCm}, weight_kg = #{weightKg},
-		goal_weight_kg = #{goalWeightKg}, bmi = #{bmi}, bmr = #{bmr},
-		activity_level = #{activityLevel}, bio = #{bio},
-		nickname = #{nickname}, photo_path = #{photoPath},
-        deleted = #{deleted}
+		name =
+		#{name},
+		age = #{age},
+		address = #{address},
+		type_id = #{typeId},
+		sex =
+		#{sex},
+		height_cm = #{heightCm},
+		weight_kg = #{weightKg},
+		goal_weight_kg
+		= #{goalWeightKg},
+		ideal_weight_kg = #{idealWeightKg},
+		weight_diff_kg =
+		#{weightDiffKg},
+		bmi = #{bmi},
+		bmr = #{bmr},
+		tdee = #{tdee},
+		calorie_goal
+		= #{calorieGoal},
+		target_days = #{targetDays},
+		start_date =
+		#{startDate},
+		goal_date = #{goalDate},
+		progress_photo_path =
+		#{progressPhotoPath},
+		activity_level = #{activityLevel},
+		bio = #{bio},
+		email = #{email},
+		password = #{password},
+		nickname = #{nickname},
+		photo_path = #{photoPath},
+		last_login = #{lastLogin},
+		last_logout =
+		#{lastLogout},
+		deleted = #{deleted}
 		WHERE id = #{id}
 	</update>
 
 	<update id="deleteUser" parameterType="int">
-		UPDATE users SET deleted = TRUE WHERE id = #{id}
+		UPDATE users SET deleted =
+		TRUE WHERE id = #{id}
 	</update>
 
 </mapper>

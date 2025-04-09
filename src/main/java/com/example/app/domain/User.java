@@ -1,6 +1,7 @@
 package com.example.app.domain;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import org.hibernate.validator.constraints.Range;
@@ -61,22 +62,32 @@ public class User {
 	@Size(max = 255, message = "自己紹介は255字以内で入力してください")
 	private String bio;
 
-    @NotBlank
-    @Email
-    private String email;
+	@NotBlank
+	@Email
+	private String email;
 
-    @NotBlank
-    private String password;
+	@NotBlank
+	private String password;
 
-    private String nickname;
+	private String nickname;
 
-    private String photoPath;
+	private String photoPath;
 
-    private LocalDateTime lastLogin;
+	private LocalDateTime lastLogin;
 
-    private LocalDateTime lastLogout;
-    
+	private LocalDateTime lastLogout;
+
 	private LocalDateTime created;
+
+	private BigDecimal idealWeightKg; // 理想体重（BMI22）
+	private BigDecimal weightDiffKg; // 現体重 - 目標体重
+	private BigDecimal tdee; // 総消費カロリー
+	private Integer calorieGoal; // 目標達成のための摂取目安kcal
+	private Integer targetDays; // 目標日数
+	private LocalDate startDate; // 開始日
+	private LocalDate goalDate; // 目標日
+	private String progressPhotoPath; // 写真ファイルパス
+	private LocalDateTime lastUpdated; // 最終更新日時
 
 	private Boolean deleted;
 }
