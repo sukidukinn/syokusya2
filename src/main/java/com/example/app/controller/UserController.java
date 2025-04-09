@@ -24,7 +24,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class UserController {
 	private final UserMapper userMapper;
-	
+
 	@Autowired
 	private MealPostMapper mealPostMapper;
 
@@ -108,12 +108,28 @@ public class UserController {
 		session.setAttribute("loginUser", user);
 
 		if ("saveAndBack".equals(action)) {
-			redirectAttrs.addFlashAttribute("pageMessage", "プロフィールを更新しました");
+			redirectAttrs.addFlashAttribute("pageMessage", "入力情報を更新しました");
 			return "redirect:/mealPosts";
 		} else {
-			model.addAttribute("pageMessage", "プロフィールを更新しました（画面はそのまま）");
+			model.addAttribute("pageMessage", "入力情報を更新しました");
 			return "profile";
 		}
 	}
 
+	@GetMapping("/profile/withdraw")
+	public String withdraw(HttpSession session) {
+	    User loginUser = (User) session.getAttribute("loginUser");
+	    if (loginUser == null) {
+	        return "redirect:/login";
+	    }
+
+	    // typeId = 4 で「退会済み」として扱う
+	    loginUser.setTypeId(4);
+	    userMapper.updateUser(loginUser); // typeId を更新するようにMapperも対応済みであること
+
+	    // セッションを破棄
+	    session.invalidate();
+
+	    return "redirect:/login";
+	}
 }
