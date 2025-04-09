@@ -83,7 +83,7 @@ public class UserController {
 			model.addAttribute("pageMessage", "");
 		}
 		
-		System.out.println("📥 プロフィール更新リクエスト: " + user);
+		//System.out.println("📥 プロフィール更新リクエスト: " + user);
 		
 		return "profile";
 	}
