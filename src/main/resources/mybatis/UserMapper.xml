@@ -18,13 +18,11 @@
 	</select>
 
 	<update id="updateLastLogin" parameterType="int">
-		UPDATE users SET
-		last_login = NOW() WHERE id = #{id}
+		UPDATE users SET last_login = NOW() WHERE id = #{id}
 	</update>
 
 	<update id="updateLastLogout" parameterType="int">
-		UPDATE users SET
-		last_logout = NOW() WHERE id = #{id}
+		UPDATE users SET last_logout = NOW() WHERE id = #{id}
 	</update>
 
 	<select id="selectUsers"
@@ -52,9 +50,11 @@
 
 	<insert id="addUser" parameterType="com.example.app.domain.User">
 		INSERT INTO users (
-		name, age, address, type_id, sex,
+		name, age,
+		address, type_id, sex,
 		height_cm, weight_kg,
-		goal_weight_kg, ideal_weight_kg, weight_diff_kg,
+		goal_weight_kg,
+		ideal_weight_kg, weight_diff_kg,
 		bmi, bmr, tdee,
 		calorie_goal,
 		target_days, start_date, goal_date, progress_photo_path,
@@ -66,13 +66,15 @@
 		#{name}, #{age}, #{address}, #{typeId}, #{sex},
 		#{heightCm},
 		#{weightKg},
-		#{goalWeightKg}, #{idealWeightKg}, #{weightDiffKg},
+		#{goalWeightKg}, #{idealWeightKg},
+		#{weightDiffKg},
 		#{bmi}, #{bmr}, #{tdee}, #{calorieGoal},
 		#{targetDays}, #{startDate},
 		#{goalDate}, #{progressPhotoPath},
 		#{activityLevel}, #{bio},
 		#{email},
-		#{password}, #{nickname}, #{photoPath},
+		#{password}, #{nickname},
+		#{photoPath},
 		FALSE, NOW()
 		)
 	</insert>
@@ -99,21 +101,15 @@
 		calorie_goal
 		= #{calorieGoal},
 		target_days = #{targetDays},
-		start_date =
-		#{startDate},
+		start_date = #{startDate},
 		goal_date = #{goalDate},
-		progress_photo_path =
-		#{progressPhotoPath},
+		progress_photo_path =#{progressPhotoPath},
 		activity_level = #{activityLevel},
 		bio = #{bio},
 		email = #{email},
 		password = #{password},
 		nickname = #{nickname},
-		photo_path = #{photoPath},
-		last_login = #{lastLogin},
-		last_logout =
-		#{lastLogout},
-		deleted = #{deleted}
+		photo_path = #{photoPath} 
 		WHERE id = #{id}
 	</update>
 

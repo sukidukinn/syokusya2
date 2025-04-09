@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import org.hibernate.validator.constraints.Range;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -84,8 +85,13 @@ public class User {
 	private BigDecimal tdee; // 総消費カロリー
 	private Integer calorieGoal; // 目標達成のための摂取目安kcal
 	private Integer targetDays; // 目標日数
+	
+	@DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
 	private LocalDate startDate; // 開始日
+	
+	@DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
 	private LocalDate goalDate; // 目標日
+	
 	private String progressPhotoPath; // 写真ファイルパス
 	private LocalDateTime lastUpdated; // 最終更新日時
 
