@@ -106,6 +106,10 @@
 		<p class="text-end">
 			ログイン中： [[${session.loginUser.nickname}]] さん ( No. [[${session.loginUser.id}]] )
 			<span th:if="${session.loginUser.typeId == 3}" class="text-danger fw-bold">★運営モード★</span>
+			<!-- プロフィール画像（あれば表示） -->
+			<img th:if="${session.loginUser.photoPath != null}"
+				th:src="@{'/uploads/' + ${#strings.substringAfter(session.loginUser.photoPath, 'uploads/')}}"
+				alt="プロフィール画像" width="60" height="60" />
 			<a class="btn btn-secondary" th:href="@{/logout}">ログアウト</a>
 			<a class="btn btn-outline-secondary" th:href="@{/profile}">プロフィール編集</a>
 		</p>
