@@ -130,7 +130,10 @@
 				<!-- フォーム内に追加 -->
 				<input type="hidden" name="bmi" id="bmiHidden" th:field="*{bmi}">
 				<input type="hidden" name="bmr" id="bmrHidden" th:field="*{bmr}">
-				<input type="hidden" name="tdee" id="tdeeHidden">
+				<input type="hidden" th:field="*{tdee}" id="tdeeHidden">
+				<input type="hidden" th:field="*{idealWeightKg}" id="idealWeightHidden">
+				<input type="hidden" th:field="*{weightDiffKg}" id="weightDiffHidden">
+				<input type="hidden" th:field="*{calorieGoal}" id="calorieGoalHidden">
 			</form>
 		</div>
 
@@ -265,6 +268,9 @@
 			document.getElementById('bmiHidden').value = bmi.toFixed(2);
 			document.getElementById('bmrHidden').value = bmr.toFixed(2);
 			document.getElementById('tdeeHidden').value = tdee.toFixed(2);
+			document.getElementById('idealWeightHidden').value = idealWeight.toFixed(1);
+			document.getElementById('weightDiffHidden').value = weightDiff.toFixed(1);
+			document.getElementById('calorieGoalHidden').value = calorieGoal.toFixed(0);
 		}
 
 		// 変更イベントにバインド
