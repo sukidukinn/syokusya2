@@ -1,7 +1,11 @@
 package com.example.app.controller;
 
+import java.io.File;
+import java.util.UUID;
+
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -10,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.app.domain.User;
@@ -23,6 +28,9 @@ import lombok.RequiredArgsConstructor;
 @Controller
 @RequiredArgsConstructor
 public class UserController {
+	@Value("${upload.path}")
+	private String uploadPath;
+
 	private final UserMapper userMapper;
 
 	@Autowired
@@ -77,59 +85,84 @@ public class UserController {
 		return "profile";
 	}
 
+	@GetMapping("/profile/clearImage")
+	public String clearProfileImage(HttpSession session, RedirectAttributes redirectAttrs) {
+		User loginUser = (User) session.getAttribute("loginUser");
+		if (loginUser != null && loginUser.getPhotoPath() != null) {
+			// 実ファイル削除
+			File file = new File(uploadPath + "/" + loginUser.getPhotoPath().replace("uploads/", ""));
+			if (file.exists())
+				file.delete();
+
+			// DB更新
+			loginUser.setPhotoPath(null);
+			userMapper.updateUser(loginUser);
+			session.setAttribute("loginUser", loginUser);
+			redirectAttrs.addFlashAttribute("pageMessage", "プロフィール画像を削除しました");
+		}
+		return "redirect:/profile";
+	}
+
 	@PostMapping("/profile/update")
 	public String updateProfile(
 			@Valid @ModelAttribute("user") User user,
 			BindingResult bindingResult,
-			HttpSession session,
+			@RequestParam("photoFile") MultipartFile photoFile,
 			@RequestParam("action") String action,
+			HttpSession session,
 			RedirectAttributes redirectAttrs,
-			Model model) {
+			Model model) throws Exception {
 
-		// セッションのログインユーザー取得
 		User loginUser = (User) session.getAttribute("loginUser");
 		user.setId(loginUser.getId());
 
-		// バリデーションエラーがある場合は元画面に戻す
 		if (bindingResult.hasErrors()) {
 			model.addAttribute("pageMessage", "入力内容に誤りがあります。");
 			return "profile";
 		}
 
-		// パスワードが空欄なら既存のものを保持
+		// パスワード処理省略（同じ）
 		if (user.getPassword() == null || user.getPassword().isEmpty()) {
 			user.setPassword(loginUser.getPassword());
 		} else {
 			user.setPassword(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt()));
 		}
 
-		// BMI/BMR等の自動計算があればここに追加
+		// 写真アップロード処理
+		if (!photoFile.isEmpty()) {
+			String filename = UUID.randomUUID() + "_" + photoFile.getOriginalFilename();
+			File destFile = new File(uploadPath, filename);
+			photoFile.transferTo(destFile);
+			user.setPhotoPath("uploads/" + filename);
+		} else {
+			user.setPhotoPath(loginUser.getPhotoPath()); // 既存画像を維持
+		}
+
 		userMapper.updateUser(user);
 		session.setAttribute("loginUser", user);
 
 		if ("saveAndBack".equals(action)) {
-			redirectAttrs.addFlashAttribute("pageMessage", "入力情報を更新しました");
+			redirectAttrs.addFlashAttribute("pageMessage", "プロフィールを更新しました");
 			return "redirect:/mealPosts";
-		} else {
-			model.addAttribute("pageMessage", "入力情報を更新しました");
-			return "profile";
 		}
+		model.addAttribute("pageMessage", "プロフィールを更新しました");
+		return "profile";
 	}
 
 	@GetMapping("/profile/withdraw")
 	public String withdraw(HttpSession session) {
-	    User loginUser = (User) session.getAttribute("loginUser");
-	    if (loginUser == null) {
-	        return "redirect:/login";
-	    }
+		User loginUser = (User) session.getAttribute("loginUser");
+		if (loginUser == null) {
+			return "redirect:/login";
+		}
 
-	    // typeId = 4 で「退会済み」として扱う
-	    loginUser.setTypeId(4);
-	    userMapper.updateUser(loginUser); // typeId を更新するようにMapperも対応済みであること
+		// typeId = 4 で「退会済み」として扱う
+		loginUser.setTypeId(4);
+		userMapper.updateUser(loginUser); // typeId を更新するようにMapperも対応済みであること
 
-	    // セッションを破棄
-	    session.invalidate();
+		// セッションを破棄
+		session.invalidate();
 
-	    return "redirect:/login";
+		return "redirect:/login";
 	}
 }
