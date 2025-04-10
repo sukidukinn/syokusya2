@@ -22,10 +22,12 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.example.app.domain.ExercisePost;
 import com.example.app.domain.MealPost;
 import com.example.app.domain.MealPostIngredient;
 import com.example.app.domain.NutritionFood;
 import com.example.app.domain.User;
+import com.example.app.mapper.ExercisePostMapper;
 import com.example.app.mapper.MealPostIngredientMapper;
 import com.example.app.mapper.MealPostMapper;
 import com.example.app.mapper.NutritionFoodMapper;
@@ -51,6 +53,10 @@ public class MealPostController {
 	@Autowired
 	private NutritionFoodMapper nutritionFoodMapper;
 
+
+	@Autowired
+	private ExercisePostMapper exercisePostMapper;
+	
 	//保存処理
 	@PostMapping("/mealPosts/save")
 	public String saveMealPost(@ModelAttribute MealPost mealPost,
@@ -118,7 +124,10 @@ public class MealPostController {
 		if (loginUser == null) {
 			return "redirect:/login";
 		}
-
+		
+		List<ExercisePost> exercisePosts = exercisePostMapper.findByUserId(loginUser.getId());
+		model.addAttribute("exercisePosts", exercisePosts);
+		
 		List<MealPost> posts;
 		if (loginUser.getTypeId() == 3) { //運営モード
 			posts = mealPostService.getMealPostList();
@@ -167,16 +176,6 @@ public class MealPostController {
 
 		List<MealPostIngredient> ingredients = mealPostIngredientMapper.selectByMealPostId(id);
 		List<NutritionFood> nutritionFoods = nutritionFoodMapper.selectAll();
-
-		/*
-		System.out.println("▼ ingredients:");
-		for (MealPostIngredient ing : ingredients) {
-		    System.out.println("  ID=" + ing.getId() +
-		            ", postId=" + ing.getMealPostId() +
-		        ", foodId=" + ing.getNutritionFoodId() +
-		        ", grams=" + ing.getAmountGrams());
-		}
-		*/
 
 		model.addAttribute("mealPost", mealPost);
 		model.addAttribute("ingredients", ingredients);

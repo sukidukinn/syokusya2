@@ -10,6 +10,7 @@
 		.smaller-text {
 			font-size: 0.85rem;
 		}
+
 		.meal-table-wrapper {
 			max-width: 1400px;
 			/* ✅ 横幅の上限を指定 */
@@ -101,10 +102,10 @@
 <body>
 	<div class="container">
 		<h1 class="mt-4">食写一覧</h1>
-		<!-- 操作に応じたメッセージを表示:start -->
-		<div hidden class="alert alert-success mt-4">
-			食写を追加しました等、操作に応じたメッセージ
-		</div>
+		
+		<!-- メッセージ -->
+		<div th:if="${pageMessage != null and !#strings.isEmpty(pageMessage)}" class="alert alert-info"
+			th:text="${pageMessage}"></div>
 
 		<p class="text-end">
 			ログイン中： [[${session.loginUser.nickname}]] さん ( No. [[${session.loginUser.id}]] )
@@ -160,11 +161,34 @@
 		<script src="/webjars/moment/2.29.1/min/moment.min.js"></script>
 		<script src="/webjars/fullcalendar/3.10.2/dist/fullcalendar.js"></script>
 
-		<!-- 操作に応じたメッセージを表示:end -->
-		<p>
-			<a class="mt-4 btn btn-primary" th:href="@{/mealPosts/add}">食事投稿の追加</a>
-		</p>
 
+		<div class="d-flex justify-content-between align-items-center mt-4">
+			<h3 class="mb-0">エクササイズ一覧</h3>
+			<a class="btn btn-outline-success" th:href="@{/exercisePosts/add}">＋エクササイズ投稿</a>
+		</div>
+		<table class="table table-striped">
+			<thead>
+				<tr>
+					<th>ID</th>
+					<th>運動名</th>
+					<th>運動部位</th>
+					<th>運動時間</th>
+					<th>消費カロリー</th>
+					<th>回数</th>
+					<th>セット</th>
+					<th>メモ</th>
+					<th>写真</th>
+					<th colspan="2">操作</th>
+				</tr>
+			</thead>
+			<tbody id="exercisePostsBody"></tbody>
+		</table>
+		<div id="exercisePaginationControls" class="mt-3 d-flex justify-content-center"></div>
+
+		<div class="d-flex justify-content-between align-items-center mt-4">
+			<h3 class="mb-0">食事一覧</h3>
+			<a class="mt-4 btn btn-primary" th:href="@{/mealPosts/add}">＋ 食事投稿の追加</a>
+		</div>
 		<div class="meal-table-wrapper">
 			<table class="table meal-table">
 				<tr>
@@ -223,6 +247,26 @@
 				</div>
 			</div>
 		</div>
+		<div class="modal fade" id="confirmExerciseDeleteModal" tabindex="-1" aria-labelledby="confirmModalLabel"
+			aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title">削除確認</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+					</div>
+					<div class="modal-body">
+						「<span id="exercise-delete-name"></span>」のエクササイズ投稿を削除します。よろしいですか？
+					</div>
+					<div class="modal-footer">
+						<a class="btn btn-danger" id="exercise-delete-yes">はい</a>
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">いいえ</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
 		<script th:src="@{/js/bootstrap.bundle.min.js}"></script>
 
 		<script th:inline="javascript">
@@ -522,6 +566,120 @@
 			// 初期表示
 			window.addEventListener("DOMContentLoaded", () => {
 				renderMealPostPage();
+			});
+		</script>
+
+		<script th:inline="javascript">
+			const exerciseItemsPerPage = 5;
+			let exerciseCurrentPage = 1;
+
+			const allExercisePosts = /*[[${exercisePosts}]]*/[];
+
+			function renderExercisePage(page = 1) {
+				const tbody = document.getElementById("exercisePostsBody");
+				tbody.innerHTML = "";
+
+				const totalPages = Math.ceil(allExercisePosts.length / exerciseItemsPerPage);
+				exerciseCurrentPage = Math.min(Math.max(1, page), totalPages);
+
+				const start = (exerciseCurrentPage - 1) * exerciseItemsPerPage;
+				const pageData = allExercisePosts.slice(start, start + exerciseItemsPerPage);
+
+				pageData.forEach(post => {
+					const [date, time] = post.exerciseTime?.split("T") ?? ["", ""];
+					const exerciseTime = `${date.replace(/-/g, "/")}<br>${time}`;
+					const photo = post.photoPath
+						? `<img src="/${post.photoPath}" width="80" height="80">`
+						: `画像なし`;
+
+					const row = document.createElement("tr");
+					row.innerHTML = `
+				<td>${post.id}</td>
+				<td>${post.exerciseName}</td>
+				<td>${post.bodyPart}</td>
+				<td class="smaller-text">${exerciseTime}</td>
+				<td class="smaller-text">${post.calorieBurned}</td>
+				<td class="smaller-text">${post.repetitionCount}</td>
+				<td class="smaller-text">${post.setCount}</td>
+				<td>${post.memo ?? ""}</td>
+				<td>${photo}</td>
+				<td><a href="/exercisePosts/edit/${post.id}" class="btn btn-primary">編集</a></td>
+				<td>
+				  <button class="btn btn-danger deleteExercise"
+				          data-name="${post.exerciseName}"
+				          data-id="${post.id}"
+				          data-bs-toggle="modal"
+				          data-bs-target="#confirmExerciseDeleteModal">
+				    削除
+				  </button>
+				</td>
+			`;
+					tbody.appendChild(row);
+				});
+
+				renderExercisePaginationControls(totalPages);
+			}
+
+			document.addEventListener("DOMContentLoaded", () => {
+				// 削除ボタンにイベントをバインド
+				document.addEventListener("click", function (e) {
+					if (e.target.classList.contains("deleteExercise")) {
+						const name = e.target.getAttribute("data-name");
+						const id = e.target.getAttribute("data-id");
+						document.getElementById("exercise-delete-name").textContent = name;
+						document.getElementById("exercise-delete-yes").setAttribute("href", `/exercisePosts/delete/${id}`);
+					}
+				});
+			});
+
+			function renderExercisePaginationControls(totalPages) {
+				const container = document.getElementById("exercisePaginationControls");
+				container.innerHTML = "";
+
+				if (totalPages <= 1) return;
+
+				const ul = document.createElement("ul");
+				ul.className = "pagination";
+
+				ul.appendChild(createPageButton("«", exerciseCurrentPage > 1, () => renderExercisePage(exerciseCurrentPage - 1)));
+
+				for (let i = 1; i <= totalPages; i++) {
+					if (i === 1 || i === totalPages || Math.abs(exerciseCurrentPage - i) <= 2) {
+						ul.appendChild(createPageButton(i, true, () => renderExercisePage(i), i === exerciseCurrentPage));
+					} else if (i === exerciseCurrentPage - 3 || i === exerciseCurrentPage + 3) {
+						const li = document.createElement("li");
+						li.className = "page-item disabled";
+						li.innerHTML = `<span class="page-link">…</span>`;
+						ul.appendChild(li);
+					}
+				}
+
+				ul.appendChild(createPageButton("»", exerciseCurrentPage < totalPages, () => renderExercisePage(exerciseCurrentPage + 1)));
+				container.appendChild(ul);
+			}
+
+			function createPageButton(label, enabled, onClick, active = false) {
+				const li = document.createElement("li");
+				li.className = `page-item ${!enabled ? "disabled" : ""} ${active ? "active" : ""}`;
+
+				const a = document.createElement("a");
+				a.className = "page-link";
+				a.href = "#";
+				a.textContent = label;
+
+				if (enabled) {
+					a.addEventListener("click", e => {
+						e.preventDefault();
+						onClick();
+					});
+				}
+
+				li.appendChild(a);
+				return li;
+			}
+
+			window.addEventListener("DOMContentLoaded", () => {
+				renderExercisePage();
 			});
 		</script>
 
