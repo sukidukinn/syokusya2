@@ -7,6 +7,9 @@
 	<title>食写一覧</title>
 	<link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
 	<style>
+		.smaller-text {
+			font-size: 0.85rem;
+		}
 		.meal-table-wrapper {
 			max-width: 1400px;
 			/* ✅ 横幅の上限を指定 */
@@ -72,7 +75,6 @@
 
 		@media screen and (max-width: 1000px) {
 			.meal-table th:nth-child(5),
-			.meal-table th:nth-child(6),
 			.meal-table th:nth-child(7),
 			.meal-table th:nth-child(8),
 			.meal-table th:nth-child(9),
@@ -82,7 +84,6 @@
 			.meal-table th:nth-child(13),
 
 			.meal-table td:nth-child(5),
-			.meal-table td:nth-child(6),
 			.meal-table td:nth-child(7),
 			.meal-table td:nth-child(8),
 			.meal-table td:nth-child(9),
@@ -172,13 +173,13 @@
 					<th>食事時間</th>
 					<th>写真</th>
 					<th>メモ</th>
-					<th>カロリー(kcal)</th>
-					<th>たんぱく質(g)</th>
-					<th>脂質(g)</th>
-					<th>炭水化物(g)</th>
-					<th>食物繊維(g)</th>
-					<th>塩分(g)</th>
-					<th>コレステロール(mg)</th>
+					<th class="smaller-text">カロリー(kcal)</th>
+					<th class="smaller-text">たんぱく質(g)</th>
+					<th class="smaller-text">脂質(g)</th>
+					<th class="smaller-text">炭水化物(g)</th>
+					<th class="smaller-text">食物繊維(g)</th>
+					<th class="smaller-text">塩分(g)</th>
+					<th class="smaller-text">コレステロール(mg)</th>
 					<th>登録日時</th>
 					<th colspan="2">操作</th>
 				</tr>
@@ -228,7 +229,7 @@
 			const columnWidths = [
 				"50px",   // ID
 				"160px",  // 食事名
-				"130px",  // 食事時間
+				"150px",  // 食事時間
 				"100px",  // 写真
 				"180px",  // メモ
 				"80px",  // カロリー
@@ -238,7 +239,7 @@
 				"80px",  // 食物繊維
 				"80px",  // 塩分
 				"100px",  // コレステロール
-				"130px",  // 登録日時
+				"150px",  // 登録日時
 				"80px",   // 編集
 				"80px"    // 削除
 			];
@@ -433,6 +434,9 @@
 					const [date, time] = post.mealTime?.split("T") ?? ["", ""];
 					const mealTime = `${date.replace(/-/g, "/")}<br>${time}`;
 
+					const [date2, time2] = post.created?.split("T") ?? ["", ""];
+					const createdTime2 = `${date2.replace(/-/g, "/")}<br>${time2}`;
+
 					const imageHtml = post.photoPath
 						? `<img src="/${post.photoPath}" width="80" height="80" alt="写真">`
 						: `画像なし`;
@@ -440,17 +444,17 @@
 					tr.innerHTML = `
 				<td>${post.id}</td>
 				<td>${post.mealName}</td>
-				<td>${mealTime}</td>
+				<td class="smaller-text">${mealTime}</td>
 				<td>${imageHtml}</td>
 				<td>${post.memo ?? ""}</td>
-				<td>${post.totalCalorie ?? 0}</td>
-				<td>${post.proteinG ?? 0}</td>
-				<td>${post.fatG ?? 0}</td>
-				<td>${post.carbohydrateG ?? 0}</td>
-				<td>${post.fiberG ?? 0}</td>
-				<td>${post.saltG ?? 0}</td>
-				<td>${post.cholesterolMg ?? 0}</td>
-				<td>${post.created?.replace("T", "<br>") ?? ""}</td>
+				<td class="smaller-text">${post.totalCalorie ?? 0}</td>
+				<td class="smaller-text">${post.proteinG ?? 0}</td>
+				<td class="smaller-text">${post.fatG ?? 0}</td>
+				<td class="smaller-text">${post.carbohydrateG ?? 0}</td>
+				<td class="smaller-text">${post.fiberG ?? 0}</td>
+				<td class="smaller-text">${post.saltG ?? 0}</td>
+				<td class="smaller-text">${post.cholesterolMg ?? 0}</td>
+				<td class="smaller-text">${createdTime2}</td>
 				<td><a href="/mealPosts/edit/${post.id}" class="btn btn-primary">編集</a></td>
 				<td>
 					<button class="btn btn-danger delete" 
