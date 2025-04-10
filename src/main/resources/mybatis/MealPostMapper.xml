@@ -5,13 +5,14 @@
 <mapper namespace="com.example.app.mapper.MealPostMapper">
 
 	<select id="findByUserId" parameterType="int"
-		resultType="MealPost">
-		SELECT * FROM meal_posts
-		WHERE user_id = #{userId} AND
-		deleted = FALSE
+		resultType="com.example.app.domain.MealPost">
+		SELECT *
+		FROM meal_posts
+		WHERE user_id = #{userId}
+		AND deleted = FALSE
 		ORDER BY meal_time DESC
 	</select>
-
+	
 	<!-- 一覧取得 -->
 	<select id="selectAll" resultType="MealPost">
 		SELECT
@@ -22,7 +23,7 @@
 		photo_path,
 		memo,
 		total_calorie,
-        total_grams,
+		total_grams,
 		protein_g,
 		fat_g,
 		carbohydrate_g,
@@ -46,14 +47,17 @@
 	<insert id="insert" parameterType="MealPost">
 		INSERT INTO meal_posts (
 		user_id, meal_name, meal_time, photo_path, memo,
-		total_calorie, total_grams, 
+		total_calorie,
+		total_grams,
 		protein_g, fat_g, carbohydrate_g,
 		fiber_g, salt_g, cholesterol_mg,
 		created
-		) VALUES (
+		) VALUES
+		(
 		#{userId}, #{mealName}, #{mealTime}, #{photoPath},
 		#{memo},
-		#{totalCalorie}, #{totalGrams}, #{proteinG}, #{fatG}, #{carbohydrateG},
+		#{totalCalorie}, #{totalGrams}, #{proteinG}, #{fatG},
+		#{carbohydrateG},
 		#{fiberG}, #{saltG}, #{cholesterolMg}, NOW()
 		)
 	</insert>
@@ -62,13 +66,15 @@
 	<update id="update" parameterType="MealPost">
 		UPDATE meal_posts
 		SET
-		user_id = #{userId},
+		user_id =
+		#{userId},
 		meal_name = #{mealName},
 		meal_time = #{mealTime},
-		photo_path = #{photoPath},
+		photo_path =
+		#{photoPath},
 		memo = #{memo},
 		total_calorie = #{totalCalorie},
-        total_grams = #{totalGrams},
+		total_grams = #{totalGrams},
 		protein_g = #{proteinG},
 		fat_g = #{fatG},
 		carbohydrate_g = #{carbohydrateG},

@@ -102,7 +102,7 @@
 <body>
 	<div class="container">
 		<h1 class="mt-4">食写一覧</h1>
-		
+
 		<!-- メッセージ -->
 		<div th:if="${pageMessage != null and !#strings.isEmpty(pageMessage)}" class="alert alert-info"
 			th:text="${pageMessage}"></div>
@@ -697,9 +697,50 @@
 						url: '/api/events/all'
 					},
 					eventClick: function (event) {
-						alert('イベント: ' + event.title);
+						if (event.url) {
+							window.location.href = event.url;
+							return false;
+						}
+					},
+					eventRender: function (event, element) {
+						const startHour = moment(event.start).hour();
+
+						// 時間帯による背景色
+						let bgColor = '';
+						if (startHour >= 5 && startHour < 11) bgColor = '#e0f7fa';       // 朝
+						else if (startHour >= 11 && startHour < 15) bgColor = '#fff3e0'; // 昼
+						else if (startHour >= 15 && startHour < 21) bgColor = '#c8e6c9'; // 夕方
+						else bgColor = '#f8bbd0';                                        // 夜中
+
+						// 背景色と文字色を調整
+						element.css({
+							'background-color': bgColor,
+							'color': '#000', // 黒文字
+							'display': 'flex',
+							'align-items': 'center',
+							'gap': '4px'
+						});
+
+						// 既存テキスト削除
+						element.find('.fc-title').html('');
+
+						// アイコン画像がある場合は表示
+						let html = '';
+						if (event.photoPath) {
+							html += `<img src="/${event.photoPath}" width="30" height="30" style="border-radius:4px;" /> `;
+						}
+
+						// 名前とカロリーを表示（event.calorieがあれば）
+						html += `<span>${event.title}</span>`;
+						if (event.calorie) {
+							html += ` <span style="font-weight: bold;">(${event.calorie} kcal)</span>`;
+						}
+
+						element.find('.fc-title').append(html);
 					}
+
 				});
+
 			});
 		</script>
 </body>

@@ -113,20 +113,11 @@ public class ExercisePostController {
 	@GetMapping("/delete/{id}")
 	public String deleteExercisePost(@PathVariable("id") int id, RedirectAttributes redirectAttributes) {
 		ExercisePost post = exercisePostMapper.selectById(id);
-		System.out.println("🔍 削除対象のID: " + id);
-
 		if (post != null) {
-			System.out.println("📄 取得した投稿: " + post);
-
 			post.setDeleted(true);
-			exercisePostMapper.update(post); // 論理削除
-
-			System.out.println("📝 論理削除フラグをtrueに設定しました");
+			exercisePostMapper.update(post);
 			redirectAttributes.addFlashAttribute("pageMessage", "エクササイズ投稿を削除しました");
-		} else {
-			System.out.println("⚠️ 指定IDの投稿が見つかりません");
 		}
-
 		return "redirect:/mealposts";
 	}
 }
