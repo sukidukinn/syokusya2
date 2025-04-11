@@ -7,6 +7,11 @@
 	<title>食写一覧</title>
 	<link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
 	<style>
+		/* FullCalendarのイベントコンテナでスクロール無効化 */
+		.fc-event-container {
+			overflow: visible !important;
+		}
+
 		.smaller-text {
 			font-size: 0.85rem;
 		}
@@ -95,32 +100,45 @@
 				display: none;
 			}
 		}
+
+		#fixed-header {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			z-index: 1030;
+			/* Bootstrapのnavbarと同等 */
+			background-color: #fff;
+			border-bottom: 1px solid #ccc;
+		}
+
+		/* 本文がヘッダーにかぶらないように余白追加 */
+		body {
+			padding-top: 110px;
+			/* headerの高さに合わせて調整 */
+		}
 	</style>
 	<link rel='stylesheet' href='/webjars/fullcalendar/3.10.2/dist/fullcalendar.css' />
 </head>
 
 <body>
-	<div class="container">
-		<h1 class="mt-4">食写一覧</h1>
-
-		<!-- メッセージ -->
-		<div th:if="${pageMessage != null and !#strings.isEmpty(pageMessage)}" class="alert alert-info"
-			th:text="${pageMessage}"></div>
-
-		<p class="text-end">
-			ログイン中： [[${session.loginUser.nickname}]] さん ( No. [[${session.loginUser.id}]] )
-			<span th:if="${session.loginUser.typeId == 3}" class="text-danger fw-bold">★運営モード★</span>
-			<!-- プロフィール画像（あれば表示） -->
+	<div id="fixed-header" class="d-flex align-items-center justify-content-between px-4">
+		<div class="d-flex align-items-center gap-4 flex-wrap">
 			<img th:if="${session.loginUser.photoPath != null}"
 				th:src="@{'/uploads/' + ${#strings.substringAfter(session.loginUser.photoPath, 'uploads/')}}"
-				alt="プロフィール画像" width="60" height="60" />
-			<a class="btn btn-secondary" th:href="@{/logout}">ログアウト</a>
-			<a class="btn btn-outline-secondary" th:href="@{/profile}">プロフィール編集</a>
-		</p>
+				alt="プロフィール画像" width="50" height="50" class="rounded-circle border" />
+			<span>[[${session.loginUser.nickname}]] さん！ 今日も頑張りましょう！</span>
+			<span>🔥TDEE: <strong>[[${session.loginUser.tdee}]]</strong>kcal</span>
+		</div>
+		<div class="d-flex align-items-center gap-2">
+			<a class="btn btn-sm btn-outline-secondary" th:href="@{/profile}">プロフィール</a>
+			<a class="btn btn-sm btn-secondary" th:href="@{/logout}">ログアウト</a>
+		</div>
+	</div>
 
+
+	<div class="container">
 		<div class="alert alert-info">
-			<p>💪 こんにちは [[${session.loginUser.nickname}]] さん！ 今日も頑張りましょう！</p>
-
 			<p>
 				🎯 目標体重: <strong>[[${session.loginUser.goalWeightKg}]]</strong> kg<br>
 				📊 理想体重 (BMI22): <strong>[[${session.loginUser.idealWeightKg}]]</strong> kg<br>
@@ -693,7 +711,10 @@
 						center: 'title',
 						right: 'month'
 					},
-					eventTimeFormat: false, // 時刻を表示しない
+					height: 'auto',  // 高さを自動にする
+					contentHeight: 'auto',       // ✅ 内容に応じて高さを自動調整
+					fixedWeekCount: false,       // ✅ 投稿がない週は描画しない（＝カレンダーの高さが詰まる
+					displayEventTime: false,  // ← ★これが v3 の正しい指定方法
 					events: {
 						url: '/api/events/all'
 					},
@@ -706,38 +727,38 @@
 					eventRender: function (event, element) {
 						const startHour = moment(event.start).hour();
 
-						// 時間帯による背景色
+						// 背景色
 						let bgColor = '';
-						if (startHour >= 5 && startHour < 11) bgColor = '#e0f7fa';       // 朝
-						else if (startHour >= 11 && startHour < 15) bgColor = '#fff3e0'; // 昼
-						else if (startHour >= 15 && startHour < 21) bgColor = '#c8e6c9'; // 夕方
-						else bgColor = '#f8bbd0';                                        // 夜中
+						if (startHour >= 5 && startHour < 11) bgColor = '#e0f7fa';
+						else if (startHour >= 11 && startHour < 15) bgColor = '#fff3e0';
+						else if (startHour >= 15 && startHour < 21) bgColor = '#c8e6c9';
+						else bgColor = '#f8bbd0';
 
-						// 背景色と文字色を調整
 						element.css({
 							'background-color': bgColor,
-							'color': '#000', // 黒文字
+							'color': '#000',
 							'display': 'flex',
 							'align-items': 'center',
 							'gap': '4px'
 						});
 
-						// 既存テキスト削除
 						element.find('.fc-title').html('');
 
 						let html = '';
-						if (event.calorie) {
-							const calorieStr = parseFloat(event.calorie).toString(); // ← .00 を消す
-							html += `<span style="font-weight: bold;">[${calorieStr}]</span>`;
-						}
 						if (event.photoPath) {
 							html += `<img src="/${event.photoPath}" width="30" height="30" style="border-radius:4px;" /> `;
 						}
-						html += `<span>${event.title}</span>`;
+
+						if (event.calorie) {
+							const calorieStr = parseFloat(event.calorie).toString();
+							html += `<span style="font-weight: bold;">${calorieStr}</span>`;
+						}
+						html += `<span> :${event.title}</span>`;
+
 						element.find('.fc-title').append(html);
 					}
-
 				});
+
 
 			});
 		</script>

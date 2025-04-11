@@ -70,7 +70,6 @@ public class MealPostController {
 
 	    User loginUser = (User) session.getAttribute("loginUser");
 	    if (loginUser == null) {
-	        System.out.println("🚫 ログイン情報がありません");
 	        return "redirect:/login";
 	    }
 

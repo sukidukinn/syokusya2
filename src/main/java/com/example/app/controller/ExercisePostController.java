@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,6 +24,7 @@ import com.example.app.domain.User;
 import com.example.app.mapper.ExercisePostMapper;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 
 @Controller
 @RequestMapping("/exercisePosts") // ← これがある場合
@@ -58,12 +60,17 @@ public class ExercisePostController {
 	}
 
 	@PostMapping("/save")
-	public String saveExercisePost(
-			@ModelAttribute ExercisePost exercisePost,
-			@RequestParam("photoFile") MultipartFile photoFile, // ← これ必須
-			@RequestParam("action") String action,
-			HttpSession session,
-			Model model) throws Exception {
+	public String saveExercisePost(@Valid @ModelAttribute("exercisePost") ExercisePost exercisePost,
+	                               BindingResult bindingResult,
+	                               @RequestParam("photoFile") MultipartFile photoFile,
+	                               @RequestParam(value = "action", required = false) String action,
+	                               HttpSession session,
+	                               Model model) throws Exception {
+	    if (bindingResult.hasErrors()) {
+	        model.addAttribute("pageMessage", "入力内容に誤りがあります");
+	        return "exerciseposts/detail";
+	    }
+	    
 		User loginUser = (User) session.getAttribute("loginUser");
 		if (loginUser == null) {
 			return "redirect:/login";

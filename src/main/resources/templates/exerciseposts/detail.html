@@ -31,14 +31,17 @@
 			<div class="col">
 				<label>セット数</label>
 				<input type="number" th:field="*{setCount}" class="form-control" />
+				<div class="text-danger" th:errors="*{setCount}"></div>
 			</div>
 			<div class="col">
 				<label>回数</label>
 				<input type="number" th:field="*{repetitionCount}" class="form-control" />
+				<div class="text-danger" th:errors="*{repetitionCount}"></div>
 			</div>
 			<div class="col">
 				<label>運動時間 (分)</label>
 				<input type="number" class="form-control" th:field="*{durationMinutes}" />
+				<div class="text-danger" th:errors="*{durationMinutes}"></div>
 			</div>
 		</div>
 
@@ -50,6 +53,7 @@
 		<div class="mb-3">
 			<label>消費カロリー</label>
 			<input type="number" th:field="*{calorieBurned}" min="0" class="form-control" required />
+			<div class="text-danger" th:errors="*{calorieBurned}"></div>
 		</div>
 
 		<div class="mb-3">
