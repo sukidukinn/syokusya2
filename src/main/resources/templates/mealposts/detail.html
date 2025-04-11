@@ -58,10 +58,12 @@
 					<div class="mb-2">
 						<label>食事名：</label>
 						<input type="text" th:field="*{mealName}" class="form-control">
+						<div class="text-danger" th:errors="*{mealName}"></div>
 					</div>
 					<div class="mb-2">
 						<label>食事時間：</label>
 						<input type="datetime-local" th:field="*{mealTime}" class="form-control" />
+						<div class="text-danger" th:errors="*{mealTime}"></div>
 					</div>
 					<div class="mb-2">
 						<label>メモ：</label>
@@ -70,36 +72,45 @@
 					<div class="mb-2">
 						<label>カロリー：</label>
 						<input type="number" th:field="*{totalCalorie}" step="0.01" class="form-control">
+						<div class="text-danger" th:errors="*{totalCalorie}"></div>
 						<label>総重量 (g)：</label>
 						<input type="number" th:field="*{totalGrams}" step="0.1" class="form-control">
+						<div class="text-danger" th:errors="*{totalGrams}"></div>
+						
 					</div>
 				</div>
 				<div class="row">
 					<div class="col">
 						<label>たんぱく質：</label>
 						<input type="number" th:field="*{proteinG}" step="0.01" class="form-control">
+						<div class="text-danger" th:errors="*{proteinG}"></div>
 					</div>
 					<div class="col">
 						<label>脂質：</label>
 						<input type="number" th:field="*{fatG}" step="0.01" class="form-control">
+						<div class="text-danger" th:errors="*{fatG}"></div>
 					</div>
 					<div class="col">
 						<label>炭水化物：</label>
 						<input type="number" th:field="*{carbohydrateG}" step="0.01" class="form-control">
+						<div class="text-danger" th:errors="*{carbohydrateG}"></div>
 					</div>
 				</div>
 				<div class="row mt-2">
 					<div class="col">
 						<label>食物繊維：</label>
 						<input type="number" th:field="*{fiberG}" step="0.01" class="form-control">
+						<div class="text-danger" th:errors="*{fiberG}"></div>
 					</div>
 					<div class="col">
 						<label>塩分：</label>
 						<input type="number" th:field="*{saltG}" step="0.01" class="form-control">
+						<div class="text-danger" th:errors="*{saltG}"></div>
 					</div>
 					<div class="col">
-						<label>コレステロール：</label>
+						<label>コレステロール(mg)：</label>
 						<input type="number" th:field="*{cholesterolMg}" step="0.01" class="form-control">
+						<div class="text-danger" th:errors="*{cholesterolMg}"></div>
 					</div>
 				</div>
 			</div>

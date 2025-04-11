@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,6 +35,7 @@ import com.example.app.mapper.NutritionFoodMapper;
 import com.example.app.service.MealPostService;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @Controller
@@ -59,18 +61,36 @@ public class MealPostController {
 	
 	//保存処理
 	@PostMapping("/mealPosts/save")
-	public String saveMealPost(@ModelAttribute MealPost mealPost,
+	public String saveMealPost(@Valid @ModelAttribute("mealPost") MealPost mealPost,
+	                           BindingResult bindingResult,
 	                           @RequestParam("photoFile") MultipartFile photoFile,
 	                           @RequestParam(value = "action", required = false) String action,
 	                           HttpSession session,
 	                           Model model) throws Exception {
+
 	    User loginUser = (User) session.getAttribute("loginUser");
 	    if (loginUser == null) {
 	        System.out.println("🚫 ログイン情報がありません");
 	        return "redirect:/login";
 	    }
 
-	    // ファイルアップロード処理
+	    // 💥 バリデーションエラーがある場合、フォームに戻す
+	    if (bindingResult.hasErrors()) {
+	        // 💡 画像パスが null なら、既存の値を再設定（エラーで飛ばされたとき消えないように）
+	        if (mealPost.getId() != null && (mealPost.getPhotoPath() == null || mealPost.getPhotoPath().isEmpty())) {
+	            MealPost existing = mealPostMapper.selectById(mealPost.getId());
+	            if (existing != null) {
+	                mealPost.setPhotoPath(existing.getPhotoPath());
+	            }
+	        }
+
+	        model.addAttribute("pageMessage", "入力に誤りがあります");
+	        model.addAttribute("nutritionFoods", nutritionFoodMapper.selectAll());
+	        model.addAttribute("mealPostIngredients", mealPostIngredientMapper.selectByMealPostId(mealPost.getId()));
+	        return "mealposts/detail";
+	    }
+
+	    // 📸 写真アップロード処理
 	    if (!photoFile.isEmpty()) {
 	        String filename = UUID.randomUUID().toString() + "_" + photoFile.getOriginalFilename();
 	        File destFile = new File(uploadPath, filename);
@@ -91,7 +111,7 @@ public class MealPostController {
 	        mealPostService.editMealPost(mealPost);
 	    }
 
-	    // 保存だけならstay、戻るならredirect
+	    // 💾 保存のみ
 	    if ("saveOnly".equals(action)) {
 	        MealPost updated = mealPostMapper.selectById(mealPost.getId());
 	        model.addAttribute("mealPost", updated);
@@ -99,10 +119,12 @@ public class MealPostController {
 	        model.addAttribute("mealPostIngredients", mealPostIngredientMapper.selectByMealPostId(mealPost.getId()));
 	        model.addAttribute("pageMessage", "食事情報を保存しました");
 	        return "mealposts/detail";
-	    } else {
-	        return "redirect:/mealposts";
 	    }
+
+	    // ✅ 戻る
+	    return "redirect:/mealposts";
 	}
+
 	//食事投稿追加処理
 	@GetMapping("/mealPosts/add")
 	public String addMealPostForm(Model model) {

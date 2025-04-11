@@ -693,6 +693,7 @@
 						center: 'title',
 						right: 'month'
 					},
+					eventTimeFormat: false, // 時刻を表示しない
 					events: {
 						url: '/api/events/all'
 					},
@@ -724,18 +725,15 @@
 						// 既存テキスト削除
 						element.find('.fc-title').html('');
 
-						// アイコン画像がある場合は表示
 						let html = '';
+						if (event.calorie) {
+							const calorieStr = parseFloat(event.calorie).toString(); // ← .00 を消す
+							html += `<span style="font-weight: bold;">[${calorieStr}]</span>`;
+						}
 						if (event.photoPath) {
 							html += `<img src="/${event.photoPath}" width="30" height="30" style="border-radius:4px;" /> `;
 						}
-
-						// 名前とカロリーを表示（event.calorieがあれば）
 						html += `<span>${event.title}</span>`;
-						if (event.calorie) {
-							html += ` <span style="font-weight: bold;">(${event.calorie} kcal)</span>`;
-						}
-
 						element.find('.fc-title').append(html);
 					}
 
